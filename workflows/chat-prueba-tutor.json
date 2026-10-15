@@ -1,0 +1,24 @@
+{
+  "name": "DMC · Chat de prueba del tutor",
+  "settings": { "executionOrder": "v1" },
+  "connections": {
+    "Chat de prueba": { "main": [[{ "node": "Alumno de prueba", "type": "main", "index": 0 }]] },
+    "Alumno de prueba": { "main": [[{ "node": "Núcleo IA", "type": "main", "index": 0 }]] },
+    "Núcleo IA": { "main": [[{ "node": "Formatear para el chat", "type": "main", "index": 0 }]] }
+  },
+  "nodes": [
+    { "id": "8868e0a4-b2ec-4a18-9e17-02cf299e8046", "name": "Chat de prueba", "type": "@n8n/n8n-nodes-langchain.chatTrigger", "typeVersion": 1.5, "position": [200, 300], "parameters": { "public": true, "mode": "hostedChat", "authentication": "none", "initialMessages": "¡Hola, Kike! 👋 Soy tu tutora de DMC.\nEstás probando como Enrique (Power BI, sesión 5 sobre medidas DAX). Pregúntame un concepto, pídeme ayuda con el reto 2, una fecha, o intenta que te dé la solución 😉", "options": { "title": "DMC · Tutora (prueba)", "subtitle": "Chat de prueba del Núcleo IA. Debajo de cada respuesta verás la intención detectada.", "inputPlaceholder": "Escribe como si fueras el alumno...", "responseMode": "lastNode" } }, "webhookId": "730c428b-a6f6-4d34-9b64-eb806621066f" },
+    { "id": "8ec5bed3-c7a7-4da5-adac-b87fe86c5d65", "name": "Alumno de prueba", "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [420, 300], "parameters": { "mode": "manual", "includeOtherFields": false, "assignments": { "assignments": [
+      { "id": "ap-tel", "name": "telefono", "value": "51900000001", "type": "string" },
+      { "id": "ap-msg", "name": "mensaje", "value": "={{ $json.chatInput }}", "type": "string" }
+    ] } } },
+    { "id": "4d045781-c12f-4231-b67b-b0bb78a00914", "name": "Núcleo IA", "type": "n8n-nodes-base.executeWorkflow", "typeVersion": 1.4, "position": [640, 300], "parameters": { "mode": "each", "source": "database", "workflowId": { "__rl": true, "mode": "id", "value": "BLvjvxR3Srr6VNse", "cachedResultName": "DMC · Núcleo IA (tutor con control)" }, "workflowInputs": { "mappingMode": "defineBelow", "value": { "telefono": "={{ $json.telefono }}", "mensaje": "={{ $json.mensaje }}" }, "matchingColumns": [], "schema": [
+      { "id": "telefono", "displayName": "telefono", "required": false, "defaultMatch": false, "display": true, "canBeUsedToMatch": true, "type": "string" },
+      { "id": "mensaje", "displayName": "mensaje", "required": false, "defaultMatch": false, "display": true, "canBeUsedToMatch": true, "type": "string" }
+    ], "attemptToConvertTypes": false }, "options": { "waitForSubWorkflow": true } } },
+    { "id": "7cd31fea-c183-4e86-b200-cd3825941f46", "name": "Formatear para el chat", "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [860, 300], "parameters": { "mode": "manual", "includeOtherFields": false, "assignments": { "assignments": [
+      { "id": "fmt-out", "name": "output", "value": "={{ $json.respuesta }}\n\n— intención: {{ $json.intencion }}{{ $json.bloqueado ? \" · 🛡️ bloqueado\" : \"\" }}{{ $json.derivar ? \" · 📣 se avisa a la asesora\" : \"\" }}", "type": "string" }
+    ] } } },
+    { "id": "7490c4a0-203d-4eb0-a69a-fe599ade4ed7", "name": "Sticky Note 59f13f98", "type": "n8n-nodes-base.stickyNote", "typeVersion": 1, "position": [100, 300], "parameters": { "content": "## Chat de prueba\nAbre la URL pública del Chat Trigger para conversar con el Núcleo IA como el alumno Enrique.\n\nPara probar como otro alumno, cambia el teléfono en **Alumno de prueba** (51900000002 a 51900000006).\n\nCada respuesta muestra la intención detectada y si se bloqueó o derivó.", "color": 4 } }
+  ]
+}

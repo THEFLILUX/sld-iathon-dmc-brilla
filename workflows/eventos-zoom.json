@@ -1,0 +1,37 @@
+{
+  "name": "DMC · Eventos de Zoom",
+  "settings": { "executionOrder": "v1", "binaryMode": "separate" },
+  "connections": {
+    "Evento de Zoom": { "main": [[{ "node": "¿Validación o evento?", "type": "main", "index": 0 }]] },
+    "¿Validación o evento?": { "main": [[{ "node": "Firmar plainToken", "type": "main", "index": 0 }], [{ "node": "Confirmar recepción (200)", "type": "main", "index": 0 }]] },
+    "Firmar plainToken": { "main": [[{ "node": "Responder validación a Zoom", "type": "main", "index": 0 }]] },
+    "Confirmar recepción (200)": { "main": [[{ "node": "Normalizar evento", "type": "main", "index": 0 }]] },
+    "Normalizar evento": { "main": [[{ "node": "Guardar en eventosZoom", "type": "main", "index": 0 }]] },
+    "Guardar en eventosZoom": { "main": [[{ "node": "¿Terminó la reunión?", "type": "main", "index": 0 }]] },
+    "¿Terminó la reunión?": { "main": [[{ "node": "Ejecutar fin de clase", "type": "main", "index": 0 }]] }
+  },
+  "nodes": [
+    { "parameters": { "httpMethod": "POST", "path": "zoom/eventos", "responseMode": "responseNode", "options": {} }, "id": "b5b5467f-1727-4204-85a3-b0c4086e149e", "name": "Evento de Zoom", "type": "n8n-nodes-base.webhook", "typeVersion": 2.2, "position": [208, 304], "webhookId": "1a3af98d-3174-406f-936c-4d78248d7adc" },
+    { "parameters": { "rules": { "values": [{ "conditions": { "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "loose", "version": 1 }, "conditions": [{ "leftValue": "={{ $json.body.event }}", "operator": { "type": "string", "operation": "equals" }, "rightValue": "endpoint.url_validation" }], "combinator": "and" }, "renameOutput": true, "outputKey": "Validación de URL" }] }, "options": { "fallbackOutput": "extra", "renameFallbackOutput": "Evento de reunión" } }, "id": "5412b5c1-5562-4f8e-93a2-d35a4cdd9872", "name": "¿Validación o evento?", "type": "n8n-nodes-base.switch", "typeVersion": 3.4, "position": [432, 304] },
+    { "parameters": { "action": "hmac", "type": "SHA256", "value": "={{ $json.body.payload.plainToken }}", "dataPropertyName": "encryptedToken", "secret": "__SET_VIA_N8N_CREDENTIAL_OR_ENV__ (Zoom Secret Token de la app, no lo dejes en texto plano aquí)" }, "id": "12d6cbaf-eb19-4148-b742-051da00ae5be", "name": "Firmar plainToken", "type": "n8n-nodes-base.crypto", "typeVersion": 1, "position": [672, 192] },
+    { "parameters": { "respondWith": "json", "responseBody": "={{ JSON.stringify({ plainToken: $json.body.payload.plainToken, encryptedToken: $json.encryptedToken }) }}", "options": {} }, "id": "afb99a8e-6978-4e1a-9c9d-5ab19213e609", "name": "Responder validación a Zoom", "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.5, "position": [912, 192] },
+    { "parameters": { "respondWith": "noData", "options": { "responseCode": 200 } }, "id": "c814e924-e430-4ad8-acdb-2c94536dbeb7", "name": "Confirmar recepción (200)", "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.5, "position": [672, 432] },
+    { "parameters": { "assignments": { "assignments": [
+      { "id": "z-evt", "name": "evento", "value": "={{ $('Evento de Zoom').item.json.body.event }}", "type": "string" },
+      { "id": "z-mid", "name": "meetingId", "value": "={{ String($('Evento de Zoom').item.json.body.payload?.object?.id ?? '') }}", "type": "string" },
+      { "id": "z-uuid", "name": "meetingUuid", "value": "={{ $('Evento de Zoom').item.json.body.payload?.object?.uuid ?? '' }}", "type": "string" },
+      { "id": "z-tema", "name": "tema", "value": "={{ $('Evento de Zoom').item.json.body.payload?.object?.topic ?? '' }}", "type": "string" },
+      { "id": "z-mail", "name": "participanteEmail", "value": "={{ ($('Evento de Zoom').item.json.body.payload?.object?.participant?.email ?? '').toLowerCase() }}", "type": "string" },
+      { "id": "z-nom", "name": "participanteNombre", "value": "={{ $('Evento de Zoom').item.json.body.payload?.object?.participant?.user_name ?? '' }}", "type": "string" },
+      { "id": "z-hora", "name": "hora", "value": "={{ $('Evento de Zoom').item.json.body.payload?.object?.participant?.join_time ?? $('Evento de Zoom').item.json.body.payload?.object?.participant?.leave_time ?? $('Evento de Zoom').item.json.body.payload?.object?.end_time ?? $('Evento de Zoom').item.json.body.payload?.object?.start_time ?? '' }}", "type": "string" },
+      { "id": "z-rec", "name": "recibido", "value": "={{ $now.toISO() }}", "type": "string" }
+    ] }, "options": {} }, "id": "87328b34-6833-4fcd-8fcc-f785cc3969ec", "name": "Normalizar evento", "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [912, 432] },
+    { "parameters": { "authentication": "serviceAccount", "operation": "create", "projectId": "noted-bliss-511220-p7", "collection": "eventosZoom", "columns": "evento,meetingId,meetingUuid,tema,participanteEmail,participanteNombre,hora,recibido" }, "id": "62da6a6d-4e71-483c-a0e6-0321a81365f5", "name": "Guardar en eventosZoom", "type": "n8n-nodes-base.googleFirebaseCloudFirestore", "typeVersion": 1.1, "position": [1152, 432], "credentials": { "googleApi": { "id": "uonbwWrzPIFV77Jo", "name": "Google Cloud DMC (cuenta de servicio)" } } },
+    { "parameters": { "content": "## Eventos de Zoom\nURL para la app de Zoom (Event notification endpoint):\n`https://sninaore.app.n8n.cloud/webhook/zoom/eventos`\n\n**Arriba:** responde la validación de URL que Zoom exige (HMAC SHA-256 con el Secret Token de la app).\n\n**Abajo:** guarda inicio/fin de reunión y entradas/salidas de participantes en Firestore `eventosZoom`. El workflow de Fin de clase los usa para calcular asistencia.", "height": 224, "width": 400, "color": 5 }, "id": "2612e48d-b4c1-4aed-b46b-804e1c0c3729", "name": "Sticky Note 6786e57c", "type": "n8n-nodes-base.stickyNote", "typeVersion": 1, "position": [48, -32] },
+    { "parameters": { "conditions": { "combinator": "and", "conditions": [{ "id": "fin-reunion", "leftValue": "={{ $('Normalizar evento').item.json.evento }}", "operator": { "operation": "equals", "type": "string" }, "rightValue": "meeting.ended" }], "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 1 } }, "options": {} }, "id": "f40cb158-a515-432b-8f46-cca2cb872336", "name": "¿Terminó la reunión?", "type": "n8n-nodes-base.if", "typeVersion": 2.2, "position": [1392, 432] },
+    { "parameters": { "workflowId": { "__rl": true, "cachedResultName": "DMC · Fin de clase", "mode": "id", "value": "6njeMr67hP6xCoFR" }, "workflowInputs": { "attemptToConvertTypes": false, "mappingMode": "defineBelow", "matchingColumns": [], "schema": [
+      { "canBeUsedToMatch": true, "defaultMatch": false, "display": true, "displayName": "meetingId", "id": "meetingId", "required": false, "type": "string" },
+      { "canBeUsedToMatch": true, "defaultMatch": false, "display": true, "displayName": "sesionId", "id": "sesionId", "required": false, "type": "string" }
+    ], "value": { "meetingId": "={{ $('Normalizar evento').item.json.meetingId }}", "sesionId": "" } }, "options": { "waitForSubWorkflow": false } }, "id": "4a73b438-0529-4e48-b2b7-fd618792856f", "name": "Ejecutar fin de clase", "type": "n8n-nodes-base.executeWorkflow", "typeVersion": 1.2, "position": [1632, 400] }
+  ]
+}

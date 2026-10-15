@@ -1,0 +1,28 @@
+{
+  "name": "DMC · Entrada de WhatsApp",
+  "settings": { "executionOrder": "v1", "binaryMode": "separate" },
+  "connections": {
+    "Mensaje de WhatsApp": { "main": [[{ "node": "Solo mensajes de texto", "type": "main", "index": 0 }]] },
+    "Solo mensajes de texto": { "main": [[{ "node": "Normalizar mensaje (WhatsApp)", "type": "main", "index": 0 }]] },
+    "Normalizar mensaje (WhatsApp)": { "main": [[{ "node": "Núcleo IA (WhatsApp)", "type": "main", "index": 0 }]] },
+    "Núcleo IA (WhatsApp)": { "main": [[{ "node": "Responder al alumno", "type": "main", "index": 0 }, { "node": "¿Derivar a asesor?", "type": "main", "index": 0 }]] },
+    "¿Derivar a asesor?": { "main": [[{ "node": "Avisar a la asesora", "type": "main", "index": 0 }]] }
+  },
+  "nodes": [
+    { "parameters": { "updates": ["messages"], "options": {} }, "id": "00f851f7-c5b6-45cc-b9d4-4e242bee63db", "name": "Mensaje de WhatsApp", "type": "n8n-nodes-base.whatsAppTrigger", "typeVersion": 1, "position": [208, 304], "webhookId": "2773fb9d-2824-459f-82e6-8b09e2fc6b0b", "credentials": { "whatsAppTriggerApi": { "id": "dIjXY6NYP6WGpAqE", "name": "WhatsApp OAuth account" } } },
+    { "parameters": { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 1 }, "conditions": [{ "leftValue": "={{ $json.messages?.[0]?.type }}", "operator": { "type": "string", "operation": "equals" }, "rightValue": "text" }], "combinator": "and" }, "options": {} }, "id": "55049c81-1d77-4ab5-84e7-12ba25675b33", "name": "Solo mensajes de texto", "type": "n8n-nodes-base.filter", "typeVersion": 2.3, "position": [432, 304] },
+    { "parameters": { "assignments": { "assignments": [
+      { "id": "wa-tel", "name": "telefono", "value": "={{ $json.messages[0].from }}", "type": "string" },
+      { "id": "wa-msg", "name": "mensaje", "value": "={{ $json.messages[0].text.body }}", "type": "string" },
+      { "id": "wa-pnid", "name": "phoneNumberId", "value": "={{ $json.metadata.phone_number_id }}", "type": "string" }
+    ] }, "options": {} }, "id": "a2586f8d-415d-4363-95ae-9febb01d0ffb", "name": "Normalizar mensaje (WhatsApp)", "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [640, 304] },
+    { "parameters": { "workflowId": { "__rl": true, "mode": "id", "value": "BLvjvxR3Srr6VNse", "cachedResultName": "DMC · Núcleo IA (tutor con control)" }, "workflowInputs": { "mappingMode": "defineBelow", "value": { "telefono": "={{ $json.telefono }}", "mensaje": "={{ $json.mensaje }}" }, "matchingColumns": [], "schema": [
+      { "id": "telefono", "displayName": "telefono", "required": false, "defaultMatch": false, "display": true, "canBeUsedToMatch": true, "type": "string" },
+      { "id": "mensaje", "displayName": "mensaje", "required": false, "defaultMatch": false, "display": true, "canBeUsedToMatch": true, "type": "string" }
+    ], "attemptToConvertTypes": false }, "mode": "each", "options": { "waitForSubWorkflow": true } }, "id": "e1f53c14-1a8f-42f5-8c85-7858f67ca2e7", "name": "Núcleo IA (WhatsApp)", "type": "n8n-nodes-base.executeWorkflow", "typeVersion": 1.4, "position": [864, 304] },
+    { "parameters": { "operation": "send", "phoneNumberId": "={{ $('Normalizar mensaje (WhatsApp)').item.json.phoneNumberId }}", "recipientPhoneNumber": "={{ $json.telefono }}", "textBody": "={{ $json.respuesta }}", "additionalFields": { "previewUrl": false } }, "id": "ed2ffdac-7045-4390-87f1-2f8963e60fa1", "name": "Responder al alumno", "type": "n8n-nodes-base.whatsApp", "typeVersion": 1.1, "position": [1104, 224], "webhookId": "1e0ef764-2385-4279-b4e3-76cbf9ec57a2", "onError": "continueRegularOutput", "credentials": { "whatsAppApi": { "id": "kzugs7yvEB2bsH2r", "name": "WhatsApp Business DMC" } } },
+    { "parameters": { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 1 }, "conditions": [{ "leftValue": "={{ $json.derivar }}", "operator": { "type": "boolean", "operation": "true", "singleValue": true }, "rightValue": "" }], "combinator": "and" }, "options": {} }, "id": "dd298006-7ad2-45ba-baaf-cd79ca10397e", "name": "¿Derivar a asesor?", "type": "n8n-nodes-base.if", "typeVersion": 2.2, "position": [1104, 432] },
+    { "parameters": { "operation": "send", "phoneNumberId": "={{ $('Normalizar mensaje (WhatsApp)').item.json.phoneNumberId }}", "recipientPhoneNumber": "__SET_EN_N8N__ Celular de la asesora con código de país, ej. 51987654321", "textBody": "=⚠️ Alumno para contactar hoy\nTeléfono: {{ $json.telefono }}\nMensaje: \"{{ $(\"Normalizar mensaje (WhatsApp)\").item.json.mensaje }}\"\nMotivo: {{ $json.intencion }}", "additionalFields": { "previewUrl": false } }, "id": "32f2aeb9-fc2d-4809-a962-4587bbc50c5d", "name": "Avisar a la asesora", "type": "n8n-nodes-base.whatsApp", "typeVersion": 1.1, "position": [1344, 400], "webhookId": "c827b619-d0cf-4b0f-994a-25ca4ff6de9c", "onError": "continueRegularOutput", "credentials": { "whatsAppApi": { "id": "kzugs7yvEB2bsH2r", "name": "WhatsApp Business DMC" } } },
+    { "parameters": { "content": "## Entrada del chatbot\n**Arriba:** mensajes reales de WhatsApp. Solo este workflow debe tener el WhatsApp Trigger (Meta admite un webhook por app).\n\n**Abajo:** simulador para el segundo alumno, el frontend o pruebas. `POST /webhook/simulador/mensaje` con `{ \"telefono\": \"51900000002\", \"mensaje\": \"...\" }`.\n\nAmbos usan el mismo **Núcleo IA**, así lo que pruebas en el simulador se comporta igual en WhatsApp.", "color": 4 }, "id": "1d9849fb-b974-4d8b-bd10-82a45367fd6d", "name": "Sticky Note 9d97da75", "type": "n8n-nodes-base.stickyNote", "typeVersion": 1, "position": [112, 304] }
+  ]
+}

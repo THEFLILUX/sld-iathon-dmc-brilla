@@ -1,0 +1,211 @@
+\documentclass[tikz,border=18pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\IfFileExists{sourcesanspro.sty}{\usepackage[default]{sourcesanspro}}{\usepackage{helvet}\renewcommand\familydefault{\sfdefault}}
+\usetikzlibrary{positioning,fit,backgrounds,arrows.meta,calc}
+
+% ---------- Paleta ----------
+\definecolor{cWA}{HTML}{128C7E}   \definecolor{fWA}{HTML}{E3F7EC}
+\definecolor{cWeb}{HTML}{1D4ED8}  \definecolor{fWeb}{HTML}{E6EEFF}
+\definecolor{cZoom}{HTML}{0B5CFF} \definecolor{fZoom}{HTML}{E3F0FF}
+\definecolor{cN8N}{HTML}{E0446A}  \definecolor{fN8N}{HTML}{FDEDF1}
+\definecolor{cAI}{HTML}{7C3AED}   \definecolor{fAI}{HTML}{F1EAFE}
+\definecolor{cDB}{HTML}{D97706}   \definecolor{fDB}{HTML}{FFF3D6}
+\definecolor{cUser}{HTML}{334155} \definecolor{fUser}{HTML}{F1F5F9}
+\definecolor{cAlert}{HTML}{DC2626}
+\definecolor{fCanal}{HTML}{F3F7FD}
+\definecolor{fGCP}{HTML}{FBF8F1}
+\definecolor{ink}{HTML}{0F172A}
+\definecolor{muted}{HTML}{64748B}
+
+\newcommand{\ra}{\ensuremath{\rightarrow}}
+
+\pgfdeclarelayer{bg}\pgfdeclarelayer{mid}
+\pgfsetlayers{bg,mid,main}
+
+\tikzset{
+  panel/.style={rounded corners=14pt, fill=#1, draw=none, inner sep=0pt},
+  phead/.style={anchor=north west, font=\small\bfseries, text=#1},
+  box/.style={rounded corners=5pt, draw=#1, line width=1.2pt, fill=white,
+              align=center, font=\scriptsize, inner sep=5pt, text=ink},
+  ubox/.style={box=cUser, text width=3.3cm},
+  container/.style={rounded corners=7pt, draw=#1, line width=1.3pt, fill=white, inner sep=6pt},
+  ctitle/.style={font=\footnotesize\bfseries, text=#1, align=center},
+  chip/.style={rounded corners=3pt, fill=#1, align=left, inner xsep=5pt,
+               inner ysep=3pt, font=\scriptsize, text=ink},
+  flow/.style={-{Stealth[length=7pt,width=6pt]}, line width=1.3pt, draw=#1},
+  bi/.style={{Stealth[length=7pt,width=6pt]}-{Stealth[length=7pt,width=6pt]}, line width=1.3pt, draw=#1},
+  lbl/.style={font=\scriptsize, text=#1, fill=white, inner sep=1.6pt, rounded corners=2pt},
+  halo/.style={preaction={draw=white, line width=5.5pt, -}},
+}
+
+% icono de persona
+\newcommand{\persona}[2]{%
+  \node[circle, fill=white, draw=#2, line width=1.1pt, minimum size=0.78cm] (pb) at #1 {};
+  \fill[#2] ($(pb.center)+(0,0.11)$) circle (0.105);
+  \fill[#2] ($(pb.center)+(-0.2,-0.25)$) arc[start angle=180,end angle=0,radius=0.2] -- cycle;
+}
+
+\begin{document}
+\hyphenpenalty=10000 \exhyphenpenalty=10000
+\begin{tikzpicture}
+
+% =====================================================================
+% TÍTULO
+% =====================================================================
+\node[anchor=south west, font=\LARGE\bfseries, text=ink] at (-3.3,17.0)
+  {Brilla \textcolor{cN8N}{·} Arquitectura del sistema};
+\node[anchor=north west, font=\normalsize, text=muted] at (-3.3,16.95)
+  {Tutor socrático por WhatsApp para DMC Institute — conectado al aula virtual real (IATHON 2026)};
+
+% =====================================================================
+% COLUMNA 1 · USUARIOS
+% =====================================================================
+\node[ubox] (asesora) at (0,14.3) {{\footnotesize\textbf{Asesora académica}}\\ recibe alertas};
+\node[ubox] (alumno)  at (0,11.8) {{\footnotesize\textbf{Alumno}}\\ WhatsApp + aula virtual};
+\node[ubox] (docente) at (0,5.0)  {{\footnotesize\textbf{Docente}}\\ sube clases y dicta en vivo};
+\persona{($(asesora.west)+(-0.6,0)$)}{cUser}
+\persona{($(alumno.west)+(-0.6,0)$)}{cUser}
+\persona{($(docente.west)+(-0.6,0)$)}{cUser}
+
+% =====================================================================
+% COLUMNA 2 · CANALES Y PLATAFORMAS
+% =====================================================================
+\node[box=cWA, text width=4.3cm] (wa) at (7,11.8)
+  {{\footnotesize\textbf{WhatsApp Business Cloud API}}\\ Meta · número de Brilla};
+
+\node[ctitle=cWeb] (aulaT) at (7,8.25) {Aula virtual DMC \textmd{(web real)}};
+\node[chip=fWeb, text width=4.4cm, below=5pt of aulaT] (aula1)
+  {\textbf{«Procesar clase»} (Brilla IA): transcribe, relaciona con la malla y pregenera 4 retos};
+\node[chip=fWeb, text width=4.4cm, below=4pt of aula1] (aula2)
+  {\textbf{Clases publicadas:} transcript, temas y retos con pistas};
+\node[chip=fWeb, text width=4.4cm, below=4pt of aula2] (aula3)
+  {\textbf{Quiz del alumno:} EXP, DMC Coins, podio e historial de intentos};
+
+\node[box=cZoom, text width=4.3cm] (zoom) at (7,2.6)
+  {{\footnotesize\textbf{Zoom}}\\ clase en vivo · webhooks de reunión};
+
+% =====================================================================
+% COLUMNA 3 · n8n CLOUD
+% =====================================================================
+\node[box=cN8N, text width=3.6cm] (entrada) at (14.3,11.8)
+  {{\footnotesize\textbf{Entrada de WhatsApp}}\\ recibe, responde y escala};
+
+\node[ctitle=cN8N] (nucT) at (20.6,13.45) {Núcleo IA \textmd{(tutor con control)}};
+\node[chip=fN8N, text width=4.2cm, below=5pt of nucT] (nuc1) {\textbf{1}\enspace Guardrails de entrada};
+\node[chip=fN8N, text width=4.2cm, below=4pt of nuc1]  (nuc2) {\textbf{2}\enspace Clasifica la intención};
+\node[chip=fN8N, text width=4.2cm, below=4pt of nuc2]  (nuc3) {\textbf{3}\enspace Tutor socrático «Brilla»};
+\node[chip=fN8N, text width=4.2cm, below=4pt of nuc3]  (nuc4) {\textbf{4}\enspace Validador anti-fuga de la solución};
+
+\node[box=cN8N, dashed, text width=3.9cm] (sim) at (20.6,14.8)
+  {{\footnotesize\textbf{Simulador / Chat de prueba}}\\ mismo núcleo, sin WhatsApp};
+
+\node[box=cN8N, text width=3.9cm] (envio) at (20.6,8.45)
+  {{\footnotesize\textbf{Envío de notificaciones}}\\ envía la cola por WhatsApp};
+
+\node[box=cN8N, text width=3.6cm] (sync) at (14.3,6.4)
+  {{\footnotesize\textbf{Sincronizar clases}}\\ cada 20 min · clases «Publicada» e historial de intentos de cada alumno};
+
+\node[ctitle=cN8N] (finT) at (20.6,5.05) {Fin de clase};
+\node[chip=fN8N, text width=4.2cm, below=5pt of finT] (fin1) {Cruza asistencia (Zoom) y entregas (aula)};
+\node[chip=fN8N, text width=4.2cm, below=4pt of fin1]  (fin2) {Gemini: resumen + 3 ejercicios};
+\node[chip=fN8N, text width=4.2cm, below=4pt of fin2]  (fin3) {+10 DMC-coins por asistencia};
+\node[chip=fN8N, text width=4.2cm, below=4pt of fin3]  (fin4) {Arma el WhatsApp de cada alumno};
+
+\node[box=cN8N, text width=3.6cm] (eventos) at (14.3,2.6)
+  {{\footnotesize\textbf{Eventos de Zoom}}\\ inicio/fin y entradas/salidas};
+
+% =====================================================================
+% COLUMNA 4 · DATOS E IA (GOOGLE CLOUD)
+% =====================================================================
+\node[box=cAI, text width=2.6cm] (gemini) at (25.9,8.5)
+  {{\footnotesize\textbf{Vertex AI}}\\{\footnotesize\textbf{Gemini 2.5 Flash}}\\[2pt] tutor, validador y resúmenes};
+
+\node[ctitle=cDB] (fsT) at (30.5,13.45) {Cloud Firestore};
+\node[chip=fDB, text width=3.9cm] (fs1) at (30.5,12.55) {\textbf{alumnos/\{teléfono\}}\\ DNI, tono, coins, sesión actual};
+\node[chip=fDB, text width=3.9cm] (fs2) at (30.5,10.95) {\textbf{sesiones/\{id\}}\\ transcripción, retos y solución};
+\node[chip=fDB, text width=3.9cm] (fs3) at (30.5,9.35)  {\textbf{entregas}\\ intentos por alumno y clase};
+\node[chip=fDB, text width=3.9cm] (fs4) at (30.5,7.75)  {\textbf{clases/\{sesionId\}}\\ resumen, ejercicios, asistencia};
+\node[chip=fDB, text width=3.9cm] (fs5) at (30.5,6.15)  {\textbf{notificaciones}\\ cola de WhatsApp y su estado};
+\node[chip=fDB, text width=3.9cm] (fs6) at (30.5,4.55)  {\textbf{eventosZoom}\\ entradas, salidas y fin de reunión};
+
+% ---------- contenedores (capa media) ----------
+\begin{pgfonlayer}{mid}
+  \node[container=cWeb, fit=(aulaT)(aula1)(aula2)(aula3)] (aula) {};
+  \node[container=cN8N, fit=(nucT)(nuc1)(nuc2)(nuc3)(nuc4)] (nucleo) {};
+  \node[container=cN8N, fit=(finT)(fin1)(fin2)(fin3)(fin4)] (fin) {};
+  \node[container=cDB,  fit=(fsT)(fs1)(fs2)(fs3)(fs4)(fs5)(fs6)] (fire) {};
+\end{pgfonlayer}
+
+% ---------- paneles de columna (fondo) ----------
+\begin{pgfonlayer}{bg}
+  \node[panel=fUser,  fit={(-3.3,0.2) (2.3,15.8)}]  (pU) {};
+  \node[panel=fCanal, fit={(4.0,0.2) (10.0,15.8)}]  (pC) {};
+  \node[panel=fN8N!55, fit={(12.0,0.2) (23.5,15.8)}] (pN) {};
+  \node[panel=fGCP,   fit={(24.0,0.2) (33.3,15.8)}] (pG) {};
+\end{pgfonlayer}
+\node[phead=cUser] at ($(pU.north west)+(0.35,-0.3)$) {USUARIOS};
+\node[phead=cWeb]  at ($(pC.north west)+(0.35,-0.3)$) {CANALES Y PLATAFORMAS};
+\node[phead=cN8N]  at ($(pN.north west)+(0.35,-0.3)$) {ORQUESTACIÓN · n8n CLOUD};
+\node[phead=cDB]   at ($(pG.north west)+(0.35,-0.3)$) {DATOS E IA · GOOGLE CLOUD};
+
+% =====================================================================
+% FLECHAS
+% =====================================================================
+% --- WhatsApp
+\draw[bi=cWA] (alumno.east) -- node[lbl=cWA, above=2pt] {chatea con Brilla} (wa.west);
+\draw[bi=cWA] (wa.east) -- node[lbl=cWA, above=2pt] {webhook / respuesta} (entrada.west);
+\draw[bi=cN8N] (entrada.east) -- node[lbl=cN8N, above=2pt] {subflujo} (nucleo.west |- entrada.east);
+\draw[flow=cN8N] (sim.south) -- (sim.south |- nucleo.north);
+\draw[flow=cAlert, dashed] (entrada.north) |- node[lbl=cAlert, pos=0.72, above=2pt] {aviso por frustración} (asesora.east);
+
+% --- Núcleo con datos e IA
+\draw[flow=cDB] (fire.west |- 0,12.6) -- node[lbl=cDB, above=2pt] {lee alumno y sesión} (nucleo.east |- 0,12.6);
+\draw[bi=cAI] ($(nucleo.south east)+(-0.5,0)$) -- (gemini.north);
+
+% --- Aula virtual
+\draw[flow=cWeb] (alumno.south) |- node[lbl=cWeb, pos=0.75, above=2pt] {practica quizzes} (aula.west |- 0,7.6);
+\draw[flow=cWeb] (docente.east) -- node[lbl=cWeb, above=2pt] {sube clase} (aula.west |- docente.east);
+\draw[flow=cWeb] (aula.east |- sync.west) -- node[lbl=cWeb, above=2pt, align=center] {HTTP + cookie\\(scraping)} (sync.west);
+\draw[flow=cDB] (sync.east) -- node[lbl=cDB, above=2pt, pos=0.36] {sesiones + entregas} (fire.west |- sync.east);
+
+% --- Zoom y fin de clase
+\draw[flow=cZoom] (docente.south) |- node[lbl=cZoom, pos=0.75, above=2pt] {dicta en vivo} (zoom.west);
+\draw[flow=cZoom] (zoom.east) -- node[lbl=cZoom, above=2pt] {webhooks} (eventos.west);
+\draw[flow=cN8N] (eventos.east) -- node[lbl=cN8N, above=2pt, font=\tiny] {meeting.ended} (fin.west |- eventos.east);
+\draw[flow=cDB] (eventos.south) |- node[lbl=cDB, pos=0.62, above=2pt] {guarda eventosZoom} (fire.south |- 0,0.9) -- (fire.south);
+\draw[bi=cDB] (fin.east |- 0,4.5) -- node[lbl=cDB, above=2pt] {alumnos · clases · notificaciones} (fire.west |- 0,4.5);
+\draw[bi=cAI, halo] ($(fin.north east)+(-0.5,0)$) -- (gemini.south);
+
+% --- Envío de notificaciones
+\coordinate (cola) at (22.0,9.75);
+\draw[flow=cDB, halo] (fire.west |- cola) -- node[lbl=cDB, above=2pt, pos=0.2] {lee la cola} (cola) -- (cola |- envio.north);
+\draw[flow=cWA] (envio.west) -- ++(-0.6,0) |- node[lbl=cWA, pos=0.72, above=2pt] {envía resumen, reto y recordatorio} (wa.south |- 0,9.6) -- (wa.south);
+
+% =====================================================================
+% NOTAS Y LEYENDA
+% =====================================================================
+\draw[rounded corners=10pt, fill=white, draw=fUser!60!cUser!40, line width=0.8pt] (-3.3,-0.35) rectangle (33.3,-2.75);
+
+\node[anchor=north west, text width=25.2cm, font=\scriptsize, text=ink, align=left] at (-2.95,-0.6)
+{{\footnotesize\textbf{\textcolor{cN8N}{Ciclo}}}\quad
+ \textbf{1.} El docente publica la clase en el aula \ra{} Brilla la sincroniza en máx. 20 min.\quad
+ \textbf{2.} El alumno pregunta por WhatsApp \ra{} recibe pistas socráticas, nunca la solución.\quad
+ \textbf{3.} Termina el Zoom \ra{} cada alumno recibe resumen, reto, coins y recordatorio según si entregó.\\[5pt]
+ {\footnotesize\textbf{\textcolor{muted}{Seguridad}}}\quad la solución de referencia solo la lee el validador, nunca el tutor.\qquad
+ {\footnotesize\textbf{\textcolor{muted}{Identidad}}}\quad cada alumno se vincula por DNI (aula) \ra{} teléfono (WhatsApp).\qquad
+ {\footnotesize\textbf{\textcolor{muted}{Legado sin uso}}}\quad Moodle simulado y Moodle real.};
+
+% leyenda
+\begin{scope}[font=\scriptsize, text=ink]
+  \draw[flow=cUser] (23.3,-0.95) -- ++(1.1,0) node[right=3pt, anchor=west] {flujo de datos (color = dominio)};
+  \draw[bi=cUser]   (23.3,-1.55) -- ++(1.1,0) node[right=3pt, anchor=west] {lectura y escritura};
+  \draw[flow=cAlert, dashed] (23.3,-2.15) -- ++(1.1,0) node[right=3pt, anchor=west] {alerta a la asesora};
+  \draw[rounded corners=2pt, draw=cN8N, dashed, line width=1pt, fill=white] (28.9,-1.15) rectangle ++(0.8,-0.45);
+  \node[anchor=west] at (29.85,-1.37) {canal de pruebas};
+  \draw[rounded corners=2pt, fill=fN8N] (28.9,-1.8) rectangle ++(0.8,-0.45);
+  \node[anchor=west] at (29.85,-2.02) {etapa interna};
+\end{scope}
+
+\end{tikzpicture}
+\end{document}

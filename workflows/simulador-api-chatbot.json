@@ -1,0 +1,22 @@
+{
+  "name": "DMC · Simulador / API del chatbot",
+  "settings": { "executionOrder": "v1" },
+  "connections": {
+    "Mensaje del simulador o frontend": { "main": [[{ "node": "Normalizar mensaje", "type": "main", "index": 0 }]] },
+    "Normalizar mensaje": { "main": [[{ "node": "Núcleo IA", "type": "main", "index": 0 }]] },
+    "Núcleo IA": { "main": [[{ "node": "Devolver respuesta", "type": "main", "index": 0 }]] }
+  },
+  "nodes": [
+    { "id": "37343cf7-09a0-401f-8d13-d8d0d548b716", "name": "Mensaje del simulador o frontend", "type": "n8n-nodes-base.webhook", "typeVersion": 2.2, "position": [200, 300], "parameters": { "httpMethod": "POST", "path": "simulador/mensaje", "responseMode": "responseNode", "options": { "allowedOrigins": "*" } }, "webhookId": "716a6c71-ecf2-4aaa-bf07-0448cb477393" },
+    { "id": "ae312609-f641-4620-8e9e-0c5dfbbb4621", "name": "Normalizar mensaje", "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [420, 300], "parameters": { "mode": "manual", "includeOtherFields": false, "assignments": { "assignments": [
+      { "id": "sim-tel", "name": "telefono", "value": "={{ $json.body?.telefono ?? $json.telefono ?? \"\" }}", "type": "string" },
+      { "id": "sim-msg", "name": "mensaje", "value": "={{ $json.body?.mensaje ?? $json.mensaje ?? \"\" }}", "type": "string" }
+    ] } } },
+    { "id": "7a54c856-59f1-4687-8ab1-9791de2452d5", "name": "Núcleo IA", "type": "n8n-nodes-base.executeWorkflow", "typeVersion": 1.4, "position": [640, 300], "parameters": { "mode": "each", "source": "database", "workflowId": { "__rl": true, "mode": "id", "value": "BLvjvxR3Srr6VNse", "cachedResultName": "DMC · Núcleo IA (tutor con control)" }, "workflowInputs": { "mappingMode": "defineBelow", "value": { "telefono": "={{ $json.telefono }}", "mensaje": "={{ $json.mensaje }}" }, "matchingColumns": [], "schema": [
+      { "id": "telefono", "displayName": "telefono", "required": false, "defaultMatch": false, "display": true, "canBeUsedToMatch": true, "type": "string" },
+      { "id": "mensaje", "displayName": "mensaje", "required": false, "defaultMatch": false, "display": true, "canBeUsedToMatch": true, "type": "string" }
+    ], "attemptToConvertTypes": false }, "options": { "waitForSubWorkflow": true } } },
+    { "id": "df8da718-2892-4438-a6cb-060411d1c785", "name": "Devolver respuesta", "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.5, "position": [860, 300], "parameters": { "respondWith": "firstIncomingItem" } },
+    { "id": "58a0fc06-a8df-4c11-842b-f916661b7512", "name": "Sticky Note 4bba2d35", "type": "n8n-nodes-base.stickyNote", "typeVersion": 1, "position": [100, 300], "parameters": { "content": "## Simulador / API del chatbot\nPara el segundo alumno, el frontend y las pruebas.\n\n`POST https://sninaore.app.n8n.cloud/webhook/simulador/mensaje`\nBody: `{ \"telefono\": \"51900000002\", \"mensaje\": \"...\" }`\n\nRespuesta: `{ telefono, respuesta, intencion, derivar, bloqueado }`. Usa el mismo Núcleo IA que WhatsApp.", "color": 4 } }
+  ]
+}
