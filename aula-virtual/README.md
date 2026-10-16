@@ -1,5 +1,7 @@
 # Aula virtual · DMC Institute
 
+**[Abrir el aula virtual DMC](https://aulavirtualdmc.34.44.96.128.sslip.io)** · En el login, selecciona **Probar DEMO**.
+
 Plataforma web de refuerzo post-clase con IA para el aula virtual de DMC. La especificación está en
 `documentacion/` y el detalle técnico en [artifacts/cuadrilla/README.md](artifacts/cuadrilla/README.md).
 

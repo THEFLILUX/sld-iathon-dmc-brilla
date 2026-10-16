@@ -1,5 +1,9 @@
 # Brilla — tutora WhatsApp de DMC Institute (IATHON)
 
+**[Abrir el aula virtual DMC](https://aulavirtualdmc.34.44.96.128.sslip.io)** · En el login, selecciona **Probar DEMO**.
+
+[<img src="QR-Aula-Virtual-DMC.png" alt="QR para abrir el aula virtual DMC" width="180">](https://aulavirtualdmc.34.44.96.128.sslip.io)
+
 Brilla es una tutora que acompaña por WhatsApp a los alumnos de DMC Institute: resume cada clase, les da ejercicios de práctica, les recuerda sus tareas y responde sus dudas con un tutor con guardrails (nunca les resuelve la tarea). Todo corre en **n8n** (orquestación), **Firestore** (datos), **Gemini en Vertex AI** (el modelo) y la **API de WhatsApp Business Cloud** (el canal).
 
 Este repo es el código fuente del sistema: los workflows de n8n exportados como JSON, más la documentación de arquitectura y de costos que se usó para decidir y presentar la solución.
