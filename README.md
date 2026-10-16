@@ -67,3 +67,11 @@ n8n (sninaore.app.n8n.cloud) · Firestore · Gemini 2.5 Flash en Vertex AI · Wh
 ## Aula virtual DMC
 
 El código de la plataforma web está en [`aula-virtual/`](aula-virtual/README.md): perfiles de alumno, docente y administrador; cursos, clases, quizzes adaptativos, tareas, resúmenes y Asistente Brilla con IA, EXP y Coins. Usa FastAPI, Jinja2 y PostgreSQL; LangChain permite elegir OpenAI o Gemini en Vertex AI desde Administración. Incluye pruebas y despliegue con Docker/Caddy en GCP. Las credenciales y los datos privados no se incluyen.
+
+## Organización del repositorio
+
+- [`workflows/`](workflows/) y [`docs/`](docs/): chatbot de WhatsApp, integraciones y documentación.
+- [`aula-virtual/`](aula-virtual/): web activa; frontend en `templates/` y `static/`, backend y prompts en módulos Python.
+- [`aula-virtual/archivo/replit/`](aula-virtual/archivo/replit/README.md): plantilla histórica, excluida del despliegue.
+
+El [mapa de carpetas y responsabilidades](aula-virtual/documentacion/estructura-del-repositorio.md) identifica también pruebas, dependencias y scripts operativos.

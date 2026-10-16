@@ -11,8 +11,7 @@
 node_modules
 **/node_modules
 documentacion
-artifacts/api-server
-artifacts/mockup-sandbox
+archivo
 artifacts/cuadrilla/uploads/*
 !artifacts/cuadrilla/uploads/.gitkeep
 artifacts/cuadrilla/sample_data/*

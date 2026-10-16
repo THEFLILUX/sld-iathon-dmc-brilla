@@ -7,8 +7,14 @@ docente ve, tema por tema, qué domina cada alumno y quién necesita apoyo. El a
 repasar un resumen de cada clase, generado automáticamente por IA a partir del transcript.
 
 La especificación está en `documentacion/` (brief, PRD, especificación funcional, historias de usuario,
-AI behavior spec y sistema de EXP y Coins). No hay chatbot ni conexión con WhatsApp: los mensajes
-predeterminados se muestran en la plataforma y quedan en una cola lista para un canal futuro.
+AI behavior spec y sistema de EXP y Coins). Este componente contiene la web; los workflows del
+chatbot de WhatsApp están en `workflows/`, en la raíz del repositorio de GitHub. Los mensajes
+predeterminados de la web se muestran en la plataforma y quedan en su cola de mensajes.
+
+El [mapa del repositorio](../../documentacion/estructura-del-repositorio.md) detalla frontend
+(`templates/`, `static/`), backend (`web/`, `services/`, `auth/`, `db/`, `rules/`), IA (`ai/`), pruebas
+(`tests/`) y scripts operativos (`deploy/gcp/`). La plantilla original está en `archivo/replit/`,
+separada de la aplicación activa.
 
 ## Ejecutar en local
 

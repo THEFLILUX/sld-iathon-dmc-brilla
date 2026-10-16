@@ -77,8 +77,20 @@ Ejecuta un solo proceso (`uv run python run.py`): los trabajos de IA corren en h
 La demo pública y las instrucciones de operación en Google Cloud están en
 [deploy/gcp/README.md](deploy/gcp/README.md).
 
-> Las carpetas `artifacts/api-server`, `artifacts/mockup-sandbox`, `lib/` y `scripts/` y los archivos de
-> pnpm son restos de la plantilla de Replit; la app no los usa.
+## Organización del proyecto
+
+| Carpeta | Responsabilidad |
+|---|---|
+| `artifacts/cuadrilla/web/`, `services/`, `auth/`, `db/`, `rules/` | Backend: rutas, servicios, acceso, persistencia y reglas académicas. |
+| `artifacts/cuadrilla/templates/` y `static/` | Frontend: plantillas Jinja2, estilos, JavaScript e imágenes. |
+| `artifacts/cuadrilla/ai/` | Prompts, proveedores, privacidad, generación y recuperación de contexto. |
+| `artifacts/cuadrilla/tests/` | Pruebas automatizadas. |
+| `deploy/gcp/` | Configuración y scripts de despliegue y respaldo. |
+| `documentacion/` | Especificaciones, arquitectura y guías técnicas. |
+| `archivo/replit/` | Plantilla histórica React/Express/pnpm y requisitos iniciales, excluidos del despliegue. |
+
+La aplicación activa se ejecuta con Python y `uv`. El [mapa del repositorio](documentacion/estructura-del-repositorio.md)
+explica la separación entre la web, los workflows del chatbot y el archivo histórico.
 
 ## Configuración actual de IA
 
