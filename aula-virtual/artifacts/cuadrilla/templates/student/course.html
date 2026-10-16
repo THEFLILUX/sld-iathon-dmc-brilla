@@ -58,7 +58,7 @@
     </section>
 
     <section class="card" id="resumenes" aria-labelledby="t-resumenes">
-      <h2 class="card-title" id="t-resumenes"><img class="summary-mascot" src="{{ url_for('static', path='img/brilla-ai.png') }}" alt="" width="28" height="28"> Resúmenes de clase <span class="chip chip-info">IA</span></h2>
+      <h2 class="card-title" id="t-resumenes"><img class="summary-mascot" src="{{ url_for('static', path='img/brilla-ai.png') }}?v=primary-20261015" alt="" width="36" height="36"> Resúmenes de clase <span class="chip chip-info">IA</span></h2>
       <p class="small muted">Repasa lo explicado en cada sesión. Brilla prepara estos resúmenes a partir del transcript de la clase.</p>
       {% for f in quizzes %}
         {% set resumen = resumenes.get(f.clase.id) %}

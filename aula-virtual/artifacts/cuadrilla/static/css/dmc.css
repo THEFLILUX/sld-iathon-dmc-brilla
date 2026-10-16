@@ -92,11 +92,11 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px}
 .btn-cyan{background:var(--cyan);color:var(--on-cyan);border-color:var(--cyan)}.btn-cyan:hover{background:#00a6bb}
 .btn-block{width:100%}
 .btn .ico{width:18px;height:18px}
-.ai-mark{display:inline-flex;align-items:center;justify-content:center;gap:2px;flex:0 0 auto;min-width:42px;height:28px;padding:2px 4px;border-radius:8px;background:#fff;color:#0068ff;box-shadow:0 0 0 1px #0068ff12}
-.ai-mark img{display:block;width:24px;height:24px;object-fit:contain}
+.ai-mark{display:inline-flex;align-items:center;justify-content:center;gap:4px;flex:0 0 auto;min-width:54px;height:36px;padding:2px 4px;border-radius:10px;background:#fff;color:#004b8d;box-shadow:0 0 0 1px #01122b24}
+.ai-mark img{display:block;width:32px;height:32px;object-fit:contain}
 .ai-mark>span{font-size:9px;font-weight:700;letter-spacing:.02em;line-height:1}
 .ai-mark[hidden],[data-ai-label][hidden]{display:none}
-.btn[data-ai-action]{text-align:left;line-height:1.4}
+.btn[data-ai-action]{text-align:left;line-height:1.4;padding-block:6px}
 .btn[data-ai-action]:hover .ai-mark img,.btn[data-ai-action]:focus-visible .ai-mark img{animation:brilla-hello .55s ease-out}
 .btn[data-ai-action].is-ai-busy .ai-mark img{animation:brilla-working 1.6s ease-in-out infinite}
 .btn[data-ai-action].is-ai-busy .ai-mark{box-shadow:0 0 0 2px #00bfd75c}
@@ -266,7 +266,7 @@ progress.bar::-moz-progress-bar{background:var(--primary);border-radius:99px}
 .assistant-heading{display:flex;align-items:center;gap:10px}
 .ai-provider-fields{display:grid;gap:12px;margin:4px 0;padding:16px;border:1px solid var(--border);border-radius:10px;min-width:0}
 .ai-provider-fields legend{font-weight:600;padding:0 6px}.ai-provider-fields p{margin:0;overflow-wrap:anywhere}
-.assistant-heading img{object-fit:contain;flex-shrink:0}
+.assistant-heading img{width:52px;height:52px;object-fit:contain;flex-shrink:0}
 .assistant-suggestions .btn{white-space:normal;text-align:left}
 .assistant-findings{padding-left:20px;display:grid;gap:16px}
 .assistant-findings p{margin:0 0 6px;white-space:pre-line;overflow-wrap:anywhere}
@@ -297,7 +297,7 @@ progress.bar::-moz-progress-bar{background:var(--primary);border-radius:99px}
 @media(max-width:600px){.profile-fields{grid-template-columns:minmax(0,1fr)}.profile-heading{flex-direction:column}}
 
 /* Shared AI class study material */
-.summary-mascot{display:block;flex:0 0 28px;object-fit:contain}
+.summary-mascot{display:block;flex:0 0 36px;width:36px;height:36px;object-fit:contain}
 .class-summary{border-top:1px solid var(--border);padding-block:14px;overflow-wrap:anywhere}
 .class-summary:last-child{padding-bottom:0}
 .class-summary summary{min-height:44px;cursor:pointer;color:var(--title);padding:6px 0;list-style:disclosure-closed}

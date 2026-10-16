@@ -9,7 +9,7 @@
 {% block scripts %}<script src="{{ url_for('static', path='js/assistant.js') }}?v=20261015" defer></script>{% endblock %}
 {% block content %}
 <p class="crumbs"><a href="{{ url_for('teacher_home') }}">Mis cursos</a> › <a href="{{ url_for('teacher_course', curso_id=curso.id) }}">{{ curso.nombre }}</a> › Asistente Brilla</p>
-<h1 class="page-title assistant-heading"><img src="{{ url_for('static', path='img/brilla-ai.png') }}" alt="" width="42" height="42"> Asistente Brilla</h1>
+<h1 class="page-title assistant-heading"><img src="{{ url_for('static', path='img/brilla-ai.png') }}?v=primary-20261015" alt="" width="52" height="52"> Asistente Brilla</h1>
 <p class="page-sub">Comprende el avance de tus alumnos y prepara el siguiente paso con evidencias del curso.</p>
 {% include "teacher/_course_nav.html" %}
 <div class="grid assistant-layout">
