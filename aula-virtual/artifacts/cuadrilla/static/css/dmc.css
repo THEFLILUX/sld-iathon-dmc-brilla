@@ -512,3 +512,15 @@ a.redeem-option:hover{border-color:var(--primary);background:var(--soft)}
 .brilla-chat-welcome>img{display:none}
 }
 @media print{.brilla-launcher,.brilla-panel{display:none!important}}
+
+/* Public presentation login: role and name only. */
+.demo-login-action{border-top:1px solid var(--border);padding-top:16px;margin-top:20px}
+.content>.demo-participants{max-width:520px;margin-inline:auto;margin-block-start:clamp(12px,4vh,36px)}
+.demo-participant-list{display:grid;gap:12px}
+.demo-participant-list form{margin:0}
+.demo-participant{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;min-height:82px;width:100%;padding:15px 18px;border:1px solid var(--border);border-radius:12px;background:var(--input-bg);font:inherit;text-align:left;cursor:pointer;color:var(--text);transition:border-color .15s,background .15s}
+.demo-participant:hover{border-color:var(--title);background:var(--info-bg)}
+.demo-participant-role{font-size:12px;font-weight:500;color:var(--text-muted)}
+.demo-participant-name{font-size:16px;font-weight:600;color:var(--title);overflow-wrap:anywhere}
+.demo-back{display:inline-flex;align-items:center;min-height:44px;margin-top:16px;font-size:13px}
+@media(max-width:600px){.demo-participant{min-height:74px;padding:12px 14px}}

@@ -2,6 +2,7 @@
 
 import threading
 import time
+import secrets
 from collections import defaultdict, deque
 from urllib.parse import urlsplit
 
@@ -9,7 +10,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 
-from auth import sessions
+from auth import demo, sessions
 from auth.deps import csrf_valido, usuario_actual, usuario_opcional
 from auth.passwords import verify_password
 from config import settings
@@ -85,6 +86,55 @@ def logout(request: Request, db=Depends(get_db), usuario=Depends(usuario_actual)
     sessions.cerrar(db, request.cookies.get(sessions.COOKIE))
     db.commit()
     return _cookie(request, RedirectResponse(request.url_for("login"), status_code=303), None)
+
+
+def _demo_cookie(request, response, nonce=None):
+    ruta = (settings.BASE_PATH or "") + "/ingresar"
+    if nonce is None:
+        response.delete_cookie(demo.COOKIE, path=ruta)
+    else:
+        response.set_cookie(demo.COOKIE, nonce, max_age=600, httponly=True, samesite="lax",
+                            secure=request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https",
+                            path=ruta)
+    return response
+
+
+@router.get("/ingresar/demo", name="demo_login")
+def demo_form(request: Request, db=Depends(get_db), usuario=Depends(usuario_opcional)):
+    if not settings.PUBLIC_DEMO_LOGIN:
+        raise HTTPException(status_code=404, detail="Acceso DEMO no disponible.")
+    if usuario is not None:
+        return RedirectResponse(request.url_for("home"), status_code=303)
+    nonce = secrets.token_urlsafe(32)
+    response = page(request, "auth/demo.html", {"page_title": "Probar DEMO",
+        "participantes": demo.participantes(db), "roles_demo": demo.ROLES, "demo_csrf": demo.firmar(nonce)})
+    return _demo_cookie(request, response, nonce)
+
+
+@router.post("/ingresar/demo", name="demo_login_post")
+def demo_login(request: Request, participante: str = Form(""), demo_csrf: str = Form("", alias="_demo_csrf"),
+               db=Depends(get_db), usuario=Depends(usuario_opcional)):
+    if not settings.PUBLIC_DEMO_LOGIN:
+        raise HTTPException(status_code=404, detail="Acceso DEMO no disponible.")
+    if usuario is not None:
+        return RedirectResponse(request.url_for("home"), status_code=303)
+    origin = request.headers.get("origin")
+    if origin and origin != "null" and urlsplit(origin).netloc != (
+            request.headers.get("x-forwarded-host") or request.headers.get("host", "")):
+        raise HTTPException(status_code=403, detail="Origen no permitido.")
+    if not demo.csrf_valido(request.cookies.get(demo.COOKIE), demo_csrf):
+        raise HTTPException(status_code=403, detail="La selección venció. Vuelve a Probar DEMO e inténtalo de nuevo.")
+    if not demo.admitir(request.client.host if request.client else ""):
+        raise HTTPException(status_code=429, detail="Demasiados accesos DEMO. Espera unos minutos y vuelve a intentarlo.")
+    elegido = dict(demo.participantes(db)).get(participante)
+    if elegido is None:
+        raise HTTPException(status_code=404, detail="Ese participante no está disponible.")
+    sessions.cerrar(db, request.cookies.get(sessions.COOKIE))
+    token = sessions.crear(db, elegido)
+    db.commit()
+    destino = "consent" if elegido.rol == "alumno" and elegido.consentimiento_en is None else "home"
+    response = _cookie(request, RedirectResponse(request.url_for(destino), status_code=303), token)
+    return _demo_cookie(request, response)
 
 
 @router.get("/consentimiento", name="consent")

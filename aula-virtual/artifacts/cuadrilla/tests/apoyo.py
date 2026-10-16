@@ -45,6 +45,7 @@ if not BASE_URL:
 SCHEMA = f"cuadrilla_test_{uuid.uuid4().hex[:10]}"
 os.environ["DATABASE_URL"] = BASE_URL + ("&" if "?" in BASE_URL else "?") + f"options=-csearch_path%3D{SCHEMA}"
 os.environ["DEMO_MODE"] = "true"
+os.environ["PUBLIC_DEMO_LOGIN"] = "false"
 os.environ["DEMO_PASSWORD"] = "clave-de-prueba"
 for _clave in ("OPENAI_API_KEY", "GOOGLE_API_KEY", "GEMINI_API_KEY", "LLM_MODEL", "OPENAI_MODEL", "TRANSCRIPTION_MODEL"):
     os.environ[_clave] = ""

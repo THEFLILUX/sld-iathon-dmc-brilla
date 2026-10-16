@@ -9,18 +9,8 @@
     <label>Contraseña<input name="password" type="password" autocomplete="current-password" required maxlength="200"></label>
     <button class="btn btn-block" type="submit">Ingresar</button>
   </form>
+  {% if settings.PUBLIC_DEMO_LOGIN %}
+  <div class="demo-login-action"><a class="btn btn-ghost btn-block" href="{{ url_for('demo_login') }}">Probar DEMO</a></div>
+  {% endif %}
 </div>
-{% if settings.DEMO_MODE %}
-<div class="card auth-card">
-  <h2 class="card-title">Cuentas disponibles</h2>
-  <p class="small muted">Usa la contraseña configurada para estas cuentas.</p>
-  <table class="table small">
-    <tr><th>Rol</th><th>DNI</th><th>Nombre</th></tr>
-    <tr><td>Alumno</td><td><code>70000001</code></td><td>Lucía Torres</td></tr>
-    <tr><td>Docente</td><td><code>20000001</code></td><td>Fernanda Ríos (Python)</td></tr>
-    <tr><td>Docente</td><td><code>20000002</code></td><td>Ricardo Paredes (Big Data)</td></tr>
-    <tr><td>Administrador</td><td><code>10000001</code></td><td>Admin DMC</td></tr>
-  </table>
-</div>
-{% endif %}
 {% endblock %}

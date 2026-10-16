@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content_class %} narrow{% endblock %}
+{% block content %}
+<section class="card demo-participants" aria-labelledby="demo-title">
+  <h1 class="page-title" id="demo-title">Probar DEMO</h1>
+  <p class="page-sub">Elige un participante</p>
+  <div class="demo-participant-list">
+    {% for clave, participante in participantes %}
+    <form method="post" action="{{ url_for('demo_login_post') }}">
+      <input type="hidden" name="_demo_csrf" value="{{ demo_csrf }}">
+      <button class="demo-participant" type="submit" name="participante" value="{{ clave }}">
+        <span class="demo-participant-role">{{ roles_demo[participante.rol] }}</span>
+        <span class="demo-participant-name">{{ participante.nombre_completo }}</span>
+      </button>
+    </form>
+    {% endfor %}
+  </div>
+  <a class="demo-back" href="{{ url_for('login') }}">Volver al login</a>
+</section>
+{% endblock %}

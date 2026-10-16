@@ -69,6 +69,7 @@ class Settings:
     GOOGLE_CLOUD_LOCATION: str = field(default_factory=lambda: os.getenv("GOOGLE_CLOUD_LOCATION", "global").strip())
     VERTEX_MODEL: str = field(default_factory=lambda: os.getenv("VERTEX_MODEL", "gemini-3.8-flash").strip())
     DEMO_MODE: bool = field(default_factory=lambda: env_bool("DEMO_MODE", True))
+    PUBLIC_DEMO_LOGIN: bool = field(default_factory=lambda: env_bool("PUBLIC_DEMO_LOGIN", False))
     DEMO_PASSWORD: str = field(default_factory=lambda: os.getenv("DEMO_PASSWORD", "").strip() or "cuadrilla", repr=False)
     ADMIN_DNI: str = field(default_factory=lambda: os.getenv("ADMIN_DNI", "").strip())
     ADMIN_PASSWORD: str = field(default_factory=lambda: os.getenv("ADMIN_PASSWORD", "").strip(), repr=False)

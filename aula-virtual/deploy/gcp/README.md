@@ -9,6 +9,11 @@ Los accesos de los cinco participantes y los alumnos ficticios adicionales está
 [el archivo privado de credenciales](../../.local/deploy-gcp/accesos-demo.md). Las contraseñas y claves
 no forman parte del repositorio ni de la imagen Docker.
 
+El login también ofrece **Probar DEMO** para entrar sin contraseña a esos cinco participantes,
+mostrando solo rol y nombre. Se habilita mediante `PUBLIC_DEMO_LOGIN=true` en `runtime.env`,
+manteniendo `DEMO_MODE=false`. Para cerrar nuevos accesos públicos, cambiarlo a `false` y recrear
+el servicio cuando no haya trabajos activos. Ver [alcance y controles del acceso DEMO](../../documentacion/acceso-demo-publico.md).
+
 ## Recursos y arquitectura
 
 | Recurso | Configuración |
