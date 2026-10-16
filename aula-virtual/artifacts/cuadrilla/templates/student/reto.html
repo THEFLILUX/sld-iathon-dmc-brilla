@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_macros.html" import tipo_reto %}
+{% block scripts %}<script src="{{ url_for('static', path='js/quiz.js') }}" defer></script>{% endblock %}
+{% block body_attrs %}{% if intento and intento.resultado == 'correcto' and intento.estado == 'completado' %} data-celebrate="item-{{ item.id }}"{% endif %}{% if intento and intento.estado == 'evaluando' %} data-refresh="4"{% endif %}{% endblock %}
+{% block content_class %} narrow{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('student_home') }}">Mis cursos</a> › <a href="{{ accion.salir }}">{{ curso.nombre }}</a> › Quiz clase {{ clase.numero }}</p>
+{% include "student/_course_nav.html" %}
+<article class="card reto" aria-labelledby="enunciado">
+  <span class="tag-corner{{ ' repaso' if item.etiqueta == 'repaso' }}">{{ etiqueta.esquina }}</span>
+  <div class="reto-meta">
+    {% if etiqueta.contador %}<span class="counter" aria-label="Reto {{ etiqueta.contador }}">{{ etiqueta.contador }}</span>{% else %}<span class="counter">REPASO</span>{% endif %}
+    <span>Tema: <strong>{{ tema.etiqueta }}</strong></span>
+    <span>Nivel: <strong>{{ NIVEL[version.nivel] }}</strong></span>
+    <span>{{ tipo_reto(version.tipo) }}</span>
+    <a class="btn btn-ghost btn-sm" style="margin-left:auto" href="{{ accion.salir }}">Salir</a>
+  </div>
+  {% if item.es_previo %}<p class="small muted" style="margin-top:-6px">Conocimiento previo: este repaso inicial no afecta tu dominio.</p>{% endif %}
+  <p class="enunciado" id="enunciado">{{ version.enunciado }}</p>
+
+  {% if not intento %}
+        {% set accion_responder = accion.responder %}
+    {% set extra_fields = {'item_id': item.id, 'envio_id': envio_id} %}
+    {% include "student/_answer.html" %}
+
+    <section id="pistas" aria-label="Pistas">
+      {% if item.pistas_usadas %}
+      <ol class="hints">
+        {% for p in version.pistas[:item.pistas_usadas] %}<li><b>Pista {{ loop.index }}.</b> {{ p }}</li>{% endfor %}
+      </ol>
+      {% endif %}
+      <div class="btn-row">
+        {% if item.pistas_usadas < 3 %}
+        <form method="post" action="{{ accion.pista }}" class="inline">
+          <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="item_id" value="{{ item.id }}">
+          <button class="btn btn-ghost btn-sm" type="submit">{{ icon('bulb') }} Pedir pista ({{ item.pistas_usadas }}/3)</button>
+        </form>
+        {% elif not item.solucion_vista %}
+        <form method="post" action="{{ accion.solucion }}" class="inline">
+          <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="item_id" value="{{ item.id }}">
+          <button class="btn btn-ghost btn-sm" type="submit">Ver la solución</button>
+        </form>
+        {% endif %}
+        {% if item.pistas_usadas %}<span class="tiny muted">Con pistas, el reto da la mitad de EXP y no cuenta para Coins.</span>{% endif %}
+      </div>
+      {% if item.solucion_vista %}
+      <div class="solution" id="solucion">
+        <p><strong>Solución:</strong> {% if version.tipo in ('alternativas', 'completar') %}{{ version.respuesta_correcta }}{% else %}{{ version.puntos_clave|join(' · ') }}{% endif %}</p>
+        <p class="small prewrap">{{ version.explicacion }}</p>
+      </div>
+      {% endif %}
+    </section>
+  {% else %}
+    {% include "student/_feedback.html" %}
+    <div class="btn-row" data-after-celebration>
+      {% if intento.estado != 'evaluando' %}
+      <form method="post" action="{{ accion.seguir }}" class="inline">
+        <input type="hidden" name="_csrf" value="{{ csrf }}">
+        <button class="btn" type="submit" autofocus>{{ 'Terminar quiz' if ultimo else 'Seguir' }}</button>
+      </form>
+      {% endif %}
+      {% if version.tipo in ('definir', 'caso') and intento.estado == 'completado' %}
+        {% if reclamado %}<span class="chip chip-info">Tu docente revisará esta calificación</span>
+        {% else %}
+        <details class="report" style="margin:0">
+          <summary>No estoy de acuerdo</summary>
+          <form method="post" action="{{ accion.desacuerdo }}">
+            <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="intento_id" value="{{ intento.id }}">
+            <input name="motivo" maxlength="500" placeholder="¿Por qué? (opcional)">
+            <button class="btn btn-sm btn-ghost" type="submit">Enviar a mi docente</button>
+          </form>
+        </details>
+        {% endif %}
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <details class="report">
+    <summary>{{ icon('flag') }} Reportar error en este reto</summary>
+    <form method="post" action="{{ accion.reportar }}">
+      <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="reto_id" value="{{ reto.id }}">
+      <input name="motivo" maxlength="500" placeholder="¿Qué está mal? (opcional)">
+      <button class="btn btn-sm btn-ghost" type="submit">Reportar</button>
+    </form>
+  </details>
+</article>
+<p class="tiny muted center">Sin cronómetro: tómate tu tiempo. Si sales, continuarás en este mismo reto.</p>
+{% endblock %}

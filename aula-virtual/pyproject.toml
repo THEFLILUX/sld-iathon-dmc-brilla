@@ -1,0 +1,27 @@
+[project]
+name = "cuadrilla"
+version = "1.0.0"
+description = "Aula virtual DMC: refuerzo post-clase con IA (FastAPI, Jinja2, PostgreSQL, LangChain)"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.143.0",
+    "google-auth>=2.62",
+    "httpx>=0.28.1",
+    "imageio-ffmpeg>=0.6.0",
+    "jinja2>=3.1.6",
+    "langchain-core>=1.6",
+    "langchain-google-genai>=4.4",
+    "langchain-openai>=1.7",
+    "openai>=3.29.0",
+    # Embedded PostgreSQL for local use without DATABASE_URL (wheels up to Python 3.12).
+    "pgserver>=0.1.4; python_version < '3.13'",
+    "psycopg[binary]>=3.3.6",
+    "pypdf>=6.0",
+    "python-dotenv>=1.2",
+    "python-multipart>=0.0.32",
+    "sqlalchemy>=2.1.4",
+    "uvicorn>=0.54.0",
+]
+
+[dependency-groups]
+dev = ["pyflakes>=3.2"]

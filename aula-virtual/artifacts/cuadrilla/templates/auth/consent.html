@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block content_class %} narrow{% endblock %}
+{% block content %}
+<h1 class="page-title">Antes de empezar</h1>
+<p class="page-sub">El aula virtual te ayuda a reforzar lo que ves en clase con retos cortos. Esto es lo que guardamos y quién lo ve.</p>
+<div class="card">
+  <h2 class="card-title">{{ icon('lock') }} Tus datos</h2>
+  <ul>
+    <li><strong>Qué guardamos:</strong> tus respuestas a los retos, el resultado, las pistas que usas, el tiempo de respuesta (no se muestra a nadie como cronómetro), tu nivel y dominio por tema, tu EXP y tus DMC Coins.</li>
+    <li><strong>Para qué:</strong> ajustar la dificultad, agendar repasos antes de que olvides un tema y darte feedback.</li>
+    <li><strong>Tu docente ve tu desempeño con tu nombre y apellido</strong>, para saber en qué temas apoyarte.</li>
+    <li><strong>El podio de tu curso muestra tu nombre y apellido</strong> junto a tu EXP.</li>
+    <li><strong>La IA no ve tu DNI, tu nombre ni tus datos de contacto.</strong> Solo recibe un alias, el curso, los temas, tus respuestas y resultados. Si escribes datos personales en una respuesta, se borran antes de guardarla.</li>
+    <li>Esto es práctica, no una evaluación: no genera notas oficiales.</li>
+    <li>Tratamos tus datos conforme a la Ley N.° 29733 de Protección de Datos Personales.</li>
+  </ul>
+  <form method="post" action="{{ url_for('consent_post') }}" class="form">
+    <input type="hidden" name="_csrf" value="{{ csrf }}">
+    <label class="check"><input type="checkbox" name="acepto" value="si" required> Leí el aviso y acepto que se guarden estos datos para mi práctica.</label>
+    <button class="btn" type="submit">Aceptar y continuar</button>
+  </form>
+</div>
+{% endblock %}

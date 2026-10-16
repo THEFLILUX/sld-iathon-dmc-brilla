@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block scripts %}<script src="{{ url_for('static', path='js/teacher.js') }}?v=20261014-brilla" defer></script>{% endblock %}
+{% block content_class %} narrow{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('teacher_home') }}">Mis cursos</a> › <a href="{{ url_for('teacher_course', curso_id=curso.id) }}">{{ curso.nombre }}</a>{% if clase %} › <a href="{{ url_for('teacher_class', clase_id=clase.id) }}#reto-{{ reto.id }}">{{ clase.nombre }}</a>{% endif %} › Editar reto</p>
+<h1 class="page-title">Editar reto</h1>
+<p class="page-sub">Tema: {{ tema.etiqueta }} · nivel máximo {{ NIVEL[tema.nivel_maximo] }}.{% if clase and clase.estado == 'publicada' %} La clase está publicada: guardar crea una nueva versión y los intentos anteriores conservan la original.{% endif %}</p>
+{% include "teacher/_course_nav.html" %}
+<nav class="btn-row" aria-label="Versiones">
+  {% for n in NIVELES %}{% if NIVELES.index(n) <= NIVELES.index(tema.nivel_maximo) %}
+  <a class="btn btn-sm {{ '' if n == nivel else 'btn-ghost' }}" href="{{ url_for('teacher_edit', reto_id=reto.id) }}?nivel={{ n }}" {% if n == nivel %}aria-current="page"{% endif %}>{{ VERSION[n] }}{% if n not in versiones %} (nueva){% endif %}</a>
+  {% endif %}{% endfor %}
+</nav>
+<form method="post" action="{{ url_for('teacher_edit_post', reto_id=reto.id) }}" class="card form" style="margin-top:12px">
+  <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="nivel" value="{{ nivel }}">
+  <h2 class="card-title">{{ VERSION[nivel] }} · {{ NIVEL[nivel] }} <span class="chip">{{ BLOOM[nivel] }}</span></h2>
+  {% include "teacher/_version_form.html" %}
+  <label>Error común que detecta el reto<input name="error_comun" maxlength="600" value="{{ error_comun }}"></label>
+  <div class="btn-row"><button class="btn" type="submit">Guardar</button>
+    {% if clase %}<a class="btn btn-ghost" href="{{ url_for('teacher_class', clase_id=clase.id) }}#reto-{{ reto.id }}">Cancelar</a>{% endif %}</div>
+</form>
+{% endblock %}

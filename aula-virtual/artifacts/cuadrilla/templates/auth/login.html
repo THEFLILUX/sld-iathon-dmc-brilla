@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content_class %} narrow{% endblock %}
+{% block content %}
+<div class="card auth-card">
+  <h1 class="page-title">Ingresa al aula</h1>
+  <p class="page-sub">Usa tu DNI y tu contraseña de DMC.</p>
+    <form method="post" action="{{ url_for('login_post') }}" class="form">
+    <label>DNI<input name="dni" inputmode="numeric" autocomplete="username" required maxlength="12" value="{{ dni or '' }}" autofocus></label>
+    <label>Contraseña<input name="password" type="password" autocomplete="current-password" required maxlength="200"></label>
+    <button class="btn btn-block" type="submit">Ingresar</button>
+  </form>
+</div>
+{% if settings.DEMO_MODE %}
+<div class="card auth-card">
+  <h2 class="card-title">Cuentas disponibles</h2>
+  <p class="small muted">Usa la contraseña configurada para estas cuentas.</p>
+  <table class="table small">
+    <tr><th>Rol</th><th>DNI</th><th>Nombre</th></tr>
+    <tr><td>Alumno</td><td><code>70000001</code></td><td>Lucía Torres</td></tr>
+    <tr><td>Docente</td><td><code>20000001</code></td><td>Fernanda Ríos (Python)</td></tr>
+    <tr><td>Docente</td><td><code>20000002</code></td><td>Ricardo Paredes (Big Data)</td></tr>
+    <tr><td>Administrador</td><td><code>10000001</code></td><td>Admin DMC</td></tr>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

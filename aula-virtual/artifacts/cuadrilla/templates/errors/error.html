@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content_class %} narrow{% endblock %}
+{% block content %}
+<div class="card center" style="max-width:520px;margin:6vh auto;padding:32px 24px">
+  <p style="font-size:64px;font-weight:700;color:var(--cyan);line-height:1;margin:0">{{ codigo }}</p>
+  <h1 class="page-title" style="margin-top:12px">{{ page_title }}</h1>
+  <p>{{ message }}</p>
+  <div class="btn-row" style="justify-content:center">
+    <a class="btn" href="{{ url_for('home') }}">Ir al inicio</a>
+  </div>
+</div>
+{% endblock %}

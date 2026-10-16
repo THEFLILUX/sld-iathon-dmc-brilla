@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_macros.html" import estado_clase %}
+{% block scripts %}<script src="{{ url_for('static', path='js/teacher.js') }}?v=20261014-brilla" defer></script>{% endblock %}
+{% block body_attrs %}{% if procesando %} data-refresh="8"{% endif %}{% endblock %}
+{% block notifications %}
+{{ super() }}
+{% if not temas %}{% call notification('warning') %}El curso aún no tiene malla. {% if usuario.rol == 'admin' %}<a href="{{ url_for('admin_course', curso_id=curso.id) }}">Cárgala aquí</a>{% else %}Pide al administrador que la cargue{% endif %}: los retos se basan en sus temas.{% endcall %}{% endif %}
+{% for c in por_validar %}{% call notification('info', title='Quiz listo para validar') %}<strong>Quiz listo para validar: {{ c.nombre }}.</strong> Tiempo restante <span class="countdown" data-deadline="{{ c.vence_validacion_en.isoformat() }}">—</span>. Si no haces nada, se publica con los retos propuestos.
+  <a href="{{ url_for('teacher_class', clase_id=c.id) }}">Validar ahora</a>{% endcall %}{% endfor %}
+{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('teacher_home') }}">Mis cursos</a> › {{ curso.nombre }}</p>
+<h1 class="page-title">{{ curso.nombre }}</h1>
+<p class="page-sub">Sube tus clases, valida el quiz en una hora y revisa a quién apoyar.</p>
+{% include "teacher/_course_nav.html" %}
+
+<div class="kpis">
+  <a class="stat" href="{{ url_for('teacher_risk', curso_id=curso.id) }}" style="text-decoration:none"><span class="stat-n">{{ riesgo }}</span><span class="stat-l">Alumnos en riesgo</span></a>
+  <a class="stat" href="{{ url_for('teacher_review', curso_id=curso.id) }}" style="text-decoration:none"><span class="stat-n">{{ revisiones }}</span><span class="stat-l">Por revisar</span></a>
+  <a class="stat" href="{{ url_for('teacher_curriculum', curso_id=curso.id) }}" style="text-decoration:none"><span class="stat-n">{{ no_cubiertos|length }}</span><span class="stat-l">Temas sin clase</span></a>
+  <div class="stat"><span class="stat-n">{{ clases|selectattr('estado', 'equalto', 'publicada')|list|length }}</span><span class="stat-l">Clases publicadas</span></div>
+</div>
+
+<div class="grid">
+  <section class="card" aria-labelledby="t-clases">
+    <h2 class="card-title" id="t-clases">{{ icon('book') }} Clases <a class="btn btn-sm push" href="{{ url_for('teacher_upload', curso_id=curso.id) }}">{{ icon('upload') }} Subir clase</a></h2>
+    {% if clases %}
+    {% set ns = namespace(modulo=None) %}
+    <ul class="list">
+      {% for c in clases %}
+      {% set m = modulo_de_clase(c.numero) %}
+      {% if m != ns.modulo %}{% set ns.modulo = m %}<li class="sub-title" style="border:0;padding-bottom:0">{{ m }}</li>{% endif %}
+      <li>
+        <div class="grow"><div class="list-title">{{ c.nombre }}</div><div class="small muted">{{ c.fecha|fecha }}{% if c.estado == 'procesando' and c.paso %} · {{ c.paso|capitalize }}…{% endif %}</div></div>
+        {{ estado_clase(c.estado) }}
+        {% if c.estado == 'publicada' %}<a class="btn btn-sm btn-ghost" href="{{ url_for('teacher_class_report', clase_id=c.id) }}">Reporte</a>{% endif %}
+        <a class="btn btn-sm" href="{{ url_for('teacher_class', clase_id=c.id) }}">{{ 'Validar' if c.estado == 'por_validar' else 'Abrir' }}</a>
+        <a class="btn btn-sm btn-danger" href="{{ url_for('teacher_class_delete', clase_id=c.id) }}" aria-label="Eliminar {{ c.nombre }}">Eliminar</a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty"><h3>Aún no hay clases</h3><p>Sube el video o el transcript de tu primera clase y el sistema pregenerará el quiz.</p></div>
+    {% endif %}
+  </section>
+  <aside class="stack">
+    <section class="card" aria-labelledby="t-nocub">
+      <h2 class="card-title" id="t-nocub">{{ icon('list') }} Temas sin clase</h2>
+      {% if no_cubiertos %}
+      <ul class="small" style="margin:0;padding-left:18px">{% for t in no_cubiertos[:12] %}<li>{{ t.etiqueta }}</li>{% endfor %}</ul>
+      {% if no_cubiertos|length > 12 %}<p class="tiny muted">y {{ no_cubiertos|length - 12 }} más.</p>{% endif %}
+      {% else %}<p class="muted small">Todos los temas de la malla tienen al menos una clase.</p>{% endif %}
+    </section>
+  </aside>
+</div>
+{% endblock %}

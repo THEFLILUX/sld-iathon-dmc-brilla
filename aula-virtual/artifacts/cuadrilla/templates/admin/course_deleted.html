@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content_class %} narrow{% endblock %}
+{% block notifications %}
+{{ super() }}
+{% call notification('warning', title='Limpieza pendiente') %}Se borraron el curso y sus datos de la base, pero quedan algunas grabaciones por limpiar. El sistema reintentará la limpieza automáticamente; si persiste, contacta al responsable técnico.{% endcall %}
+{% endblock %}
+{% block content %}
+<h1 class="page-title">Curso eliminado</h1>
+<a class="btn" href="{{ url_for('admin_home') }}">Volver a Administración</a>
+{% endblock %}

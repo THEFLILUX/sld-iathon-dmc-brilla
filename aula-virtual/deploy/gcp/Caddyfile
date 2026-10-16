@@ -1,0 +1,8 @@
+{$SITE_HOST} {
+    encode zstd gzip
+    reverse_proxy app:8000
+}
+
+cuadrilla.34.44.96.128.sslip.io {
+    redir https://{$SITE_HOST}{uri} 308
+}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from "_ai.html" import ai_button with context %}
+{% from "_icons.html" import icon %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('teacher_home') }}">Mis cursos</a> › <a href="{{ url_for('teacher_course', curso_id=curso.id) }}">{{ curso.nombre }}</a> › Revisión</p>
+<h1 class="page-title">Bandeja de revisión</h1>
+<p class="page-sub">Casos que necesitan tu criterio. Nada de esto castiga al alumno automáticamente.</p>
+{% include "teacher/_course_nav.html" %}
+{% if filas %}
+{% for r in filas %}
+<article class="card" style="margin-bottom:12px{% if r.estado != 'pendiente' %};opacity:.7{% endif %}">
+  <h2 class="card-title"><span class="chip {{ 'chip-err' if r.tipo == 'error_reportado' else 'chip-warn' if r.tipo == 'anomalia' else 'chip-info' }}">{{ etiqueta[r.tipo] }}</span>
+    {% if r.alumno_id %}<span class="small">{{ alumnos[r.alumno_id].nombre_completo }}</span>{% endif %}
+    <span class="tiny muted push">{{ r.creado_en|fecha_hora }}</span></h2>
+  <p class="small">{{ r.motivo }}</p>
+  {% if r.intento_id and intentos[r.intento_id] %}
+    {% set i = intentos[r.intento_id] %}{% set v = versiones[i.id] %}
+    <dl class="kv">
+      <dt>Reto</dt><dd class="prewrap">{{ v.enunciado }}</dd>
+      <dt>Puntos clave</dt><dd>{{ v.puntos_clave|join(' · ') }}</dd>
+      <dt>Respuesta</dt><dd class="prewrap">{{ i.respuesta }}</dd>
+      <dt>Calificación</dt><dd>{{ (i.resultado or 'pendiente')|capitalize }}{% if i.calificacion %} · {{ i.calificacion.justificacion }}{% endif %}</dd>
+    </dl>
+  {% elif r.reto_id and retos[r.reto_id] %}
+    <p class="small">Reto {{ retos[r.reto_id].id }} · estado {{ retos[r.reto_id].estado }}</p>
+  {% endif %}
+  {% if r.estado == 'pendiente' %}
+  <form method="post" action="{{ url_for('teacher_review_resolve', revision_id=r.id) }}" class="form" style="margin-top:8px">
+    <input type="hidden" name="_csrf" value="{{ csrf }}">
+    <label>Nota <span class="hint">(opcional)</span><input name="nota" maxlength="1000"></label>
+    <div class="btn-row">
+    {% if r.tipo in ('reclamo', 'marcado_ia') %}
+      <select name="resultado" style="width:auto" aria-label="Nueva calificación"><option value="correcto">Correcto</option><option value="parcial">Parcial</option><option value="incorrecto">Incorrecto</option></select>
+      <button class="btn btn-sm" name="accion" value="corregir" type="submit">Corregir calificación</button>
+      <button class="btn btn-sm btn-ghost" name="accion" value="mantener" type="submit">Mantener</button>
+    {% elif r.tipo == 'error_reportado' %}
+      <a class="btn btn-sm" href="{{ url_for('teacher_edit', reto_id=r.reto_id) }}">Corregir y reactivar</a>
+      <button class="btn btn-sm btn-ghost" name="accion" value="reactivar" type="submit">Reactivar sin cambios</button>
+      {{ ai_button('Rechazar y reemplazar', enabled=settings.ai_enabled and retos.get(r.reto_id) and retos[r.reto_id].uso == 'clase' and retos[r.reto_id].posicion is not none, cls='btn btn-sm btn-danger', name='accion', value='rechazar_reto', confirm='¿Rechazar este reto? Se retirará su contenido actual y se solicitará un reemplazo cuando corresponda.') }}
+    {% else %}
+      <button class="btn btn-sm" name="accion" value="resuelta" type="submit">Revisada</button>
+      <button class="btn btn-sm btn-ghost" name="accion" value="desestimada" type="submit">Desestimar</button>
+    {% endif %}
+    </div>
+    {% if r.tipo == 'anomalia' %}<p class="tiny muted">Si confirmas la anomalía, pide al administrador que ajuste el EXP con un motivo. Las Coins pagadas no se restan.</p>{% endif %}
+  </form>
+  {% else %}
+  <p class="small"><span class="chip chip-ok">{{ r.estado|capitalize }}</span> {{ r.resolucion or '' }}</p>
+  {% endif %}
+</article>
+{% endfor %}
+{% else %}
+<div class="empty"><h3>La bandeja está vacía</h3><p>Aquí llegan los reclamos «No estoy de acuerdo», los retos retirados por 3 reportes y las anomalías.</p></div>
+{% endif %}
+{% endblock %}

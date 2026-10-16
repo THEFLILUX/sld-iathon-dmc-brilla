@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block content %}
+<h1 class="page-title">Coins y EXP</h1>
+<p class="page-sub">Ajustes manuales con cantidad y motivo. Quedan registrados con tu usuario y la fecha.</p>
+<div class="grid-2">
+  <section class="card" aria-labelledby="t-coins">
+    <h2 class="card-title" id="t-coins">{{ icon('coin') }} Sumar Coins</h2>
+    <form method="post" action="{{ url_for('admin_coins_add') }}" class="form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <div class="row-2"><label>DNI del alumno<input name="dni" required maxlength="12"></label><label>Cantidad<input type="number" name="cantidad" min="1" max="10000" required></label></div>
+      <label>Motivo<input name="motivo" required maxlength="1000" placeholder="Ej.: participación destacada en el taller presencial"></label>
+      <button class="btn btn-sm" type="submit">Sumar Coins</button>
+    </form>
+  </section>
+  <section class="card" aria-labelledby="t-exp">
+    <h2 class="card-title" id="t-exp">{{ icon('star') }} Ajustar EXP</h2>
+    <p class="small muted" style="margin-top:0">Para anomalías que el docente confirmó. Las Coins ya pagadas no se restan.</p>
+    <form method="post" action="{{ url_for('admin_exp_adjust') }}" class="form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <div class="row-2"><label>DNI del alumno<input name="dni" required maxlength="12"></label><label>Ajuste (±)<input type="number" name="cantidad" required></label></div>
+      <label>Curso<select name="curso_id" required>{% for c in cursos %}<option value="{{ c.id }}">{{ c.nombre }}</option>{% endfor %}</select></label>
+      <label>Motivo<input name="motivo" required maxlength="1000"></label>
+      <button class="btn btn-sm" type="submit">Registrar ajuste</button>
+    </form>
+  </section>
+</div>
+<section class="card mt-module" aria-labelledby="t-ult">
+  <h2 class="card-title" id="t-ult">Últimos ajustes y pagos</h2>
+  {% if ajustes %}
+  <ul class="moves">{% for m, u in ajustes %}<li><span>{{ u.nombre_completo }} · {{ origen.get(m.origen, m.origen) }} ({{ m.tipo }})<small>{{ m.creado_en|fecha_hora }}{% if m.motivo %} · {{ m.motivo }}{% endif %}</small></span><span class="{{ 'pos' if m.cantidad > 0 else 'neg' }}">{{ '%+d'|format(m.cantidad) }}</span></li>{% endfor %}</ul>
+  {% else %}<p class="muted">Sin ajustes todavía.</p>{% endif %}
+</section>
+{% endblock %}

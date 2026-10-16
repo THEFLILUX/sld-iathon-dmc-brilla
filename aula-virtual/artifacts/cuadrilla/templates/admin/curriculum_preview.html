@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% from "_ai.html" import ai_button with context %}
+{% block notifications %}
+{{ super() }}
+{% if avisos %}{% call notification('warning', title='Revisa estas observaciones') %}<ul>{% for aviso in avisos %}<li>{{ aviso }}</li>{% endfor %}</ul>{% endcall %}{% endif %}
+{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('admin_home') }}">Administración</a> › <a href="{{ url_for('admin_course', curso_id=curso.id) }}">{{ curso.nombre }}</a> › Revisar malla PDF</p>
+<h1 class="page-title">Revisar malla PDF</h1>
+<p class="page-sub">{{ archivo }} · {{ temas|length }} temas extraídos. Todavía no se ha guardado ningún cambio.</p>
+<section class="card">
+  <h2 class="card-title">Temas y objetivos para {{ curso.nombre }}</h2>
+  <p class="small">La IA organiza el contenido del PDF. Los objetivos marcados como propuestos no estaban explícitos en la fuente: comprueba que sean adecuados.</p>
+  <div class="table-wrap"><table class="table cards">
+    <thead><tr><th>Módulo</th><th>Tema y subtema</th><th>Objetivo de aprendizaje</th></tr></thead>
+    <tbody>{% for t in temas %}<tr>
+      <td data-label="Módulo">{{ t.modulo or '—' }}</td>
+      <td data-label="Tema y subtema"><strong>{{ t.nombre }}</strong>{% if t.subtema %}<div class="small">{{ t.subtema }}</div>{% endif %}</td>
+      <td data-label="Objetivo de aprendizaje">{{ t.objetivo }}{% if t.objetivo_propuesto %}<div><span class="chip chip-warn">Objetivo propuesto por IA</span></div>{% endif %}</td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+  <p class="small">Al confirmar, se añaden los temas nuevos y se actualizan los coincidentes. Los temas anteriores y su historial se conservan. Si hay errores, cancela y corrige el documento; también puedes ajustar los objetivos después en Malla y rúbricas.</p>
+  <form method="post" action="{{ url_for('admin_curriculum_confirm', curso_id=curso.id) }}" class="form">
+    <input type="hidden" name="_csrf" value="{{ csrf }}">
+    <input type="hidden" name="temas_json" value="{{ temas_json }}">
+    <label class="check"><input type="checkbox" name="confirmo" value="si" required> Revisé los temas y objetivos de esta malla.</label>
+    <div class="btn-row">{{ ai_button('Confirmar y guardar malla', enabled=settings.ai_enabled) }}<a class="btn btn-ghost" href="{{ url_for('admin_course', curso_id=curso.id) }}">Cancelar</a></div>
+  </form>
+</section>
+{% endblock %}

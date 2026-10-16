@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('teacher_home') }}">Mis cursos</a> › <a href="{{ url_for('teacher_course', curso_id=curso.id) }}">{{ curso.nombre }}</a> › Alumnos</p>
+<h1 class="page-title">Alumnos</h1>
+<p class="page-sub">Abre el reporte de un alumno para ver el estado de cada tema de la malla.</p>
+{% include "teacher/_course_nav.html" %}
+<section class="card">
+  {% if alumnos %}
+  <div class="table-wrap"><table class="table cards">
+    <thead><tr><th>Alumno</th><th class="num">EXP</th><th class="num">Puesto</th><th class="num">Dominio prom.</th><th>Última actividad</th><th></th></tr></thead>
+    <tbody>
+    {% for f in alumnos %}
+    <tr>
+      <td data-label="Alumno"><strong>{{ f.alumno.apellido }}, {{ f.alumno.nombre }}</strong></td>
+      <td data-label="EXP" class="num">{{ f.exp|miles }}</td>
+      <td data-label="Puesto" class="num">{{ '#' ~ f.puesto if f.exp else '—' }}</td>
+      <td data-label="Dominio" class="num">{{ f.dominio ~ '%' if f.dominio is not none else '—' }}</td>
+      <td data-label="Última actividad">{{ f.ultima|fecha_hora if f.ultima else 'Sin actividad' }}</td>
+      <td><a class="btn btn-sm btn-ghost" href="{{ url_for('teacher_student', curso_id=curso.id, alumno_id=f.alumno.id) }}">Ver reporte</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<div class="empty"><h3>No hay alumnos inscritos</h3></div>{% endif %}
+</section>
+{% endblock %}

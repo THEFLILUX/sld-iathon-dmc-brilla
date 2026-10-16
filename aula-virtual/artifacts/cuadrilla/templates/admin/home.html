@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block notifications %}
+{{ super() }}
+{% if not settings.ai_enabled %}{% call notification('warning') %}Falta <code>{{ settings.variable_clave() }}</code> en el archivo <code>.env</code>: no se podrán pregenerar quizzes ni calificar respuestas abiertas.{% endcall %}{% endif %}
+{% endblock %}
+{% block content %}
+<h1 class="page-title">Administración</h1>
+<p class="page-sub">Carga la malla y el brochure, gestiona usuarios y Coins, y cierra los cursos.</p>
+<p class="small muted">IA: {{ config_ia.etiqueta }} · <code>{{ config_ia.modelo }}</code> · <a href="{{ url_for('admin_ai') }}">Configurar proveedor y modelos</a></p>
+<div class="kpis">
+  <div class="stat"><span class="stat-n">{{ conteos.get('alumno', 0) }}</span><span class="stat-l">Alumnos</span></div>
+  <div class="stat"><span class="stat-n">{{ conteos.get('docente', 0) }}</span><span class="stat-l">Docentes</span></div>
+  <div class="stat"><span class="stat-n">{{ cursos|length }}</span><span class="stat-l">Cursos</span></div>
+</div>
+<div class="grid">
+  <section class="card" aria-labelledby="t-cursos">
+    <h2 class="card-title" id="t-cursos">{{ icon('book') }} Cursos</h2>
+    {% if cursos %}
+    <ul class="list">{% for c in cursos %}
+      <li><span class="grow list-title">{{ c.nombre }}</span>{% if c.estado == 'cerrado' %}<span class="chip">Cerrado</span>{% endif %}
+        <a class="btn btn-sm btn-ghost" href="{{ url_for('teacher_course', curso_id=c.id) }}">Vista docente</a>
+        <a class="btn btn-sm" href="{{ url_for('admin_course', curso_id=c.id) }}">Configurar</a></li>
+    {% endfor %}</ul>
+    {% else %}<p class="muted">Aún no hay cursos.</p>{% endif %}
+    <h3 class="sub-title">Nuevo curso</h3>
+    <form method="post" action="{{ url_for('admin_course_create') }}" class="form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <label>Nombre<input name="nombre" required maxlength="250"></label>
+      <div class="row-2"><label>Inicio<input type="date" name="fecha_inicio"></label><label>Fin<input type="date" name="fecha_fin"></label></div>
+      <button class="btn btn-sm" type="submit">Crear curso</button>
+    </form>
+  </section>
+  <aside class="stack">
+    {% if settings.DEMO_MODE %}
+    <section class="card" aria-labelledby="t-demo">
+      <h2 class="card-title" id="t-demo">{{ icon('bolt') }} Contenido inicial</h2>
+      <p class="small">Carga la clase 1 publicada, la clase 2 por validar, sus retos y los registros de actividad de cuatro alumnos.</p>
+      <form method="post" action="{{ url_for('admin_demo') }}"><input type="hidden" name="_csrf" value="{{ csrf }}"><button class="btn btn-sm" type="submit">Cargar contenido inicial</button></form>
+    </section>
+    {% endif %}
+    <section class="card" aria-labelledby="t-ia">
+      <h2 class="card-title" id="t-ia">{{ icon('chart') }} Uso de IA</h2>
+      {% if uso_ia %}
+      <table class="table small"><tr><th>Componente</th><th class="num">Llamadas</th><th class="num">Tokens</th></tr>
+        {% for comp, n, ent, sal in uso_ia %}<tr><td>{{ comp }}</td><td class="num">{{ n }}</td><td class="num">{{ (ent + sal)|miles }}</td></tr>{% endfor %}</table>
+      <p class="tiny muted">Registro sin datos personales: componente, modelo, tokens y resultado.</p>
+      {% else %}<p class="muted small">Sin llamadas registradas.</p>{% endif %}
+    </section>
+  </aside>
+</div>
+{% endblock %}

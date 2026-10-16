@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_ai.html" import ai_button with context %}
+{% macro dato(valor) -%}
+  {% if valor is mapping %}<dl>{% for k, v in valor.items() %}<dt>{{ k }}</dt><dd>{{ dato(v) }}</dd>{% endfor %}</dl>
+  {% elif valor is sequence and valor is not string %}{% if valor %}<ul>{% for v in valor %}<li>{{ dato(v) }}</li>{% endfor %}</ul>{% else %}Sin registros{% endif %}
+  {% elif valor is none %}Sin datos{% elif valor is sameas true %}Sí{% elif valor is sameas false %}No{% else %}{{ valor }}{% endif %}
+{%- endmacro %}
+{% block scripts %}<script src="{{ url_for('static', path='js/assistant.js') }}?v=20261015" defer></script>{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('teacher_home') }}">Mis cursos</a> › <a href="{{ url_for('teacher_course', curso_id=curso.id) }}">{{ curso.nombre }}</a> › Asistente Brilla</p>
+<h1 class="page-title assistant-heading"><img src="{{ url_for('static', path='img/brilla-ai.png') }}" alt="" width="42" height="42"> Asistente Brilla</h1>
+<p class="page-sub">Comprende el avance de tus alumnos y prepara el siguiente paso con evidencias del curso.</p>
+{% include "teacher/_course_nav.html" %}
+<div class="grid assistant-layout">
+  <div class="stack">
+    <section class="card" aria-labelledby="t-consulta">
+      <h2 class="card-title" id="t-consulta">{{ icon('bulb') }} ¿Qué quieres conocer?</h2>
+      <form method="post" action="{{ url_for('teacher_assistant_ask', curso_id=curso.id) }}" class="form" data-assistant-form>
+        <input type="hidden" name="_csrf" value="{{ csrf }}">
+        <div class="row-2">
+          <label for="assistant-student">Alumno<select name="alumno_id" id="assistant-student">
+            <option value="0">Todo el curso</option>
+            {% for a in alumnos %}<option value="{{ a.id }}"{% if a.id == alumno_id %} selected{% endif %}>{{ a.nombre_completo }}</option>{% endfor %}
+          </select></label>
+          <label for="assistant-period">Periodo de actividad<select name="periodo" id="assistant-period">
+            {% for valor, etiqueta in periodos.items() %}<option value="{{ valor }}"{% if valor == periodo %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+          </select></label>
+        </div>
+        <label for="assistant-question">Tu consulta<textarea name="pregunta" id="assistant-question" rows="3" minlength="8" maxlength="1200" required aria-describedby="assistant-help" placeholder="¿Qué debería reforzar este alumno y qué actividad le recomendarías?">{{ pregunta }}</textarea></label>
+        <p id="assistant-help" class="small muted">Selecciona un alumno o escribe su nombre. Cada consulta utiliza los registros disponibles en ese momento.</p>
+        <div class="btn-row assistant-suggestions" aria-label="Ideas de consultas">
+          <button class="btn btn-sm btn-ghost" type="button" data-assistant-question="¿Qué temas requieren refuerzo y qué actividades recomiendas según el rendimiento registrado?">Temas por reforzar</button>
+          <button class="btn btn-sm btn-ghost" type="button" data-assistant-question="¿Qué señales de inactividad o dificultad aparecen y qué seguimiento docente recomiendas?">Seguimiento</button>
+          <button class="btn btn-sm btn-ghost" type="button" data-assistant-question="¿Qué tareas se marcaron listas y cómo adaptar la práctica al perfil y disponibilidad del alumno?">Tareas y perfil</button>
+        </div>
+        <div class="btn-row">{{ ai_button('Consultar a Brilla') }}<a class="btn btn-ghost" href="{{ url_for('teacher_assistant', curso_id=curso.id) }}">Nueva consulta</a></div>
+        <p class="small muted" data-assistant-status role="status" hidden>Brilla está revisando los registros. Esto puede tardar unos segundos…</p>
+      </form>
+    </section>
+    {% if resultado %}
+    <section class="card assistant-answer" aria-labelledby="t-respuesta" data-assistant-answer tabindex="-1">
+      <h2 class="card-title" id="t-respuesta">{{ icon('chart') }} Lo que muestran los registros</h2>
+      <p class="small muted">Consultado el {{ resultado.momento|fecha_hora }} (Lima) · {{ periodos[periodo] }} para actividad y puntajes.</p>
+      {% for clave, titulo in (('hallazgos', 'Hallazgos'), ('recomendaciones', 'Siguientes pasos sugeridos')) %}
+      {% if resultado.respuesta[clave] %}
+      <h3 class="sub-title">{{ titulo }}</h3>
+      <ul class="assistant-findings">{% for item in resultado.respuesta[clave] %}
+        <li><p>{{ item.texto }}</p><div class="assistant-citations" aria-label="Evidencias de esta afirmación">{% for fid in item.fuentes %}<a href="#fuente-{{ fid }}">{{ fid }}</a>{% endfor %}</div></li>
+      {% endfor %}</ul>
+      {% endif %}{% endfor %}
+      <div class="assistant-limits"><h3 class="sub-title">Alcance de la respuesta</h3><ul>{% for limite in resultado.respuesta.limites %}<li>{{ limite }}</li>{% endfor %}</ul></div>
+      <p class="tiny muted">Las recomendaciones apoyan tu criterio docente. No modifican notas, perfiles, Coins ni actividades.</p>
+    </section>
+    <section class="card" aria-labelledby="t-fuentes">
+      <h2 class="card-title" id="t-fuentes">{{ icon('book') }} Evidencias consultadas</h2>
+      <p class="small muted">Las métricas se calculan en la plataforma. El dominio y las tareas reflejan el estado vigente; el periodo filtra intentos y quizzes.</p>
+      {% if resultado.alcance.alumnos_inscritos > resultado.alcance.alumnos_con_detalle|length %}<p class="small muted">El panorama incluye todo el grupo; el detalle cubre {{ resultado.alcance.alumnos_con_detalle|length }} de {{ resultado.alcance.alumnos_inscritos }} alumnos. Selecciona uno para consultar su información.</p>{% endif %}
+      <div class="stack">{% for f in resultado.fuentes_visibles %}
+        <details class="assistant-source" id="fuente-{{ f.id }}">
+          <summary><span class="chip">{{ f.id }}</span> {{ f.titulo }}</summary>
+          {{ dato(f.datos) }}
+          <a class="btn btn-sm btn-ghost" href="{{ url_for(f.ruta, **f.params) }}">Abrir registro</a>
+        </details>
+      {% endfor %}</div>
+    </section>
+    {% endif %}
+  </div>
+  <aside class="stack">
+    <section class="card" aria-labelledby="t-alcance">
+      <h2 class="card-title" id="t-alcance">{{ icon('lock') }} Datos de este curso</h2>
+      <p class="small">Brilla consulta resultados, dominio por tema, repasos, tareas marcadas y contexto académico del perfil.</p>
+      <p class="small">Las respuestas incluyen referencias para contrastarlas. Si falta información, Brilla debe indicarlo.</p>
+      <p class="small muted">«Tarea lista» es una declaración del alumno; no acredita una entrega ni su calidad. Los conocimientos del perfil son declarados.</p>
+      <a class="btn btn-sm btn-ghost" href="{{ url_for('teacher_students', curso_id=curso.id) }}">Ver alumnos y reportes</a>
+    </section>
+  </aside>
+</div>
+{% endblock %}

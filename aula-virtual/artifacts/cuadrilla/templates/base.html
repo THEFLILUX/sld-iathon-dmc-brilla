@@ -1,0 +1,106 @@
+{% from "_icons.html" import icon %}
+{% from "_notifications.html" import notification %}
+<!doctype html>
+<html lang="es-PE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ page_title }} · DMC Institute</title>
+<meta name="description" content="Aula virtual de DMC Institute: refuerzo post-clase con IA.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="{{ url_for('static', path='favicon.svg') }}" type="image/svg+xml">
+<link rel="preload" href="{{ url_for('static', path='fonts/poppins-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/dmc.css') }}?v=20261015-vertex">
+<script src="{{ url_for('static', path='js/ui.js') }}?v=20261015-notificaciones" defer></script>
+{% block scripts %}{% endblock %}
+</head>
+{% set rol = usuario.rol if usuario else 'invitado' %}
+{% set curso_ctx = curso if curso is defined and curso else None %}
+{% set nav_alumno = rol == 'alumno' and active_nav %}
+{% set seccion_docente = rol in ('docente', 'admin') and curso_ctx and active_nav in ('curso', 'subir', 'alumnos', 'asistente', 'riesgo', 'revision', 'malla', 'podio') %}
+{% set nav_principal = 'cursos' if curso_ctx and (rol == 'alumno' or seccion_docente) else active_nav %}
+<body class="rol-{{ rol }}{% if nav_alumno %} has-bottom-nav{% endif %}"{% block body_attrs %}{% endblock %}>
+<a class="skip" href="#contenido">Saltar al contenido</a>
+<header class="topbar">
+  {% if usuario %}
+  <button type="button" class="icon-btn menu-btn" data-menu-toggle aria-controls="sidebar" aria-expanded="false" aria-label="Abrir menú">
+    <span data-icon-open>{{ icon('menu') }}</span><span data-icon-close hidden>{{ icon('close') }}</span>
+  </button>
+  {% endif %}
+  <a class="logo" href="{{ url_for('home') }}" aria-label="DMC Institute, inicio"><img src="{{ url_for('static', path='img/logo-dmc-institute-color.png') }}" alt="DMC Institute" width="2078" height="269"></a>
+  {% if usuario %}
+  <div class="topbar-right">
+    <span class="who">{{ usuario.nombre_completo }}<small>{{ {'alumno': 'Alumno', 'docente': 'Docente', 'admin': 'Administrador'}[usuario.rol] }}</small></span>
+    <a class="avatar avatar-link" href="{{ url_for('user_profile') }}" aria-label="Ver mi perfil" title="Ver mi perfil"{% if active_nav == 'perfil' %} aria-current="page"{% endif %}>{{ usuario.nombre[:1]|upper }}{{ usuario.apellido[:1]|upper }}</a>
+    <form method="post" action="{{ url_for('logout') }}" class="inline">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <button type="submit" class="icon-btn" aria-label="Salir" title="Salir">{{ icon('logout') }}</button>
+    </form>
+  </div>
+  {% endif %}
+</header>
+
+<div class="shell">
+  {% if usuario %}
+  <nav class="sidebar" id="sidebar" aria-label="Navegación principal" data-sidebar>
+    <ul>
+    {% macro nav(url, label, ico, key) -%}
+      <li><a href="{{ url }}" data-nav class="{{ 'active' if nav_principal == key }}" {% if nav_principal == key %}aria-current="{{ 'true' if nav_principal == 'cursos' and curso_ctx else 'page' }}"{% endif %}>{{ icon(ico) }}<span>{{ label }}</span></a></li>
+    {%- endmacro %}
+    {% if rol == 'alumno' %}
+      {{ nav(url_for('student_home'), 'Mis cursos', 'grid', 'cursos') }}
+      {{ nav(url_for('student_coins'), 'Mis Coins', 'coin', 'coins') }}
+    {% else %}
+      {{ nav(url_for('teacher_home'), 'Mis cursos', 'grid', 'cursos') }}
+      {% if rol == 'admin' %}
+        {{ nav(url_for('admin_home'), 'Admin', 'grid', 'admin') }}
+        {{ nav(url_for('admin_users'), 'Usuarios', 'users', 'usuarios') }}
+        {{ nav(url_for('admin_coins'), 'Coins y EXP', 'coin', 'coins') }}
+        {{ nav(url_for('admin_redemptions'), 'Canjes', 'star', 'canjes') }}
+        {{ nav(url_for('admin_movements'), 'Movimientos', 'list', 'movimientos') }}
+        {{ nav(url_for('admin_params'), 'Parámetros', 'settings', 'parametros') }}
+        {{ nav(url_for('admin_ai'), 'IA y modelos', 'bulb', 'ia') }}
+      {% endif %}
+    {% endif %}
+    </ul>
+  </nav>
+  <div class="scrim" data-scrim hidden></div>
+  {% endif %}
+
+  <div class="main-col">
+    <main id="contenido" class="content{% block content_class %}{% endblock %}" tabindex="-1">
+      {% block content %}{% endblock %}
+    </main>
+    <footer class="footer">
+      <div class="footer-body">DMC Institute · Refuerzo post-clase · {% if curso_ctx %}{{ curso_ctx.nombre }}{% else %}Aula virtual{% endif %}</div>
+      <div class="footer-strip" aria-hidden="true"></div>
+    </footer>
+  </div>
+</div>
+{% if nav_alumno %}
+<nav class="bottom-nav" aria-label="Navegación del alumno">
+  <a href="{{ url_for('student_home') }}" class="{{ 'active' if nav_principal == 'cursos' }}" {% if nav_principal == 'cursos' %}aria-current="{{ 'true' if curso_ctx else 'page' }}"{% endif %}>{{ icon('grid') }}Mis cursos</a>
+  <a href="{{ url_for('student_coins') }}" class="{{ 'active' if nav_principal == 'coins' }}" {% if nav_principal == 'coins' %}aria-current="page"{% endif %}>{{ icon('coin') }}Mis Coins</a>
+</nav>
+{% endif %}
+<section class="notifications" data-notifications aria-label="Notificaciones">
+  {% block notifications %}
+    {% if error %}{% call notification('error') %}{{ error }}{% endcall %}{% endif %}
+    {% if aviso %}{% call notification('success', flash=true) %}{{ aviso }}{% endcall %}{% endif %}
+  {% endblock %}
+  <div class="notification-controls" data-notification-controls hidden>
+    <span data-notification-count></span>
+    <button type="button" data-notification-next>Siguiente aviso <span aria-hidden="true">›</span></button>
+  </div>
+</section>
+<dialog class="confirm-dialog" data-confirm-dialog aria-labelledby="confirm-title" aria-describedby="confirm-copy">
+  <div class="confirm-symbol" aria-hidden="true">{{ icon('alert') }}</div>
+  <h2 id="confirm-title">Confirmar acción</h2>
+  <p id="confirm-copy"></p>
+  <div class="confirm-actions">
+    <button class="btn btn-ghost" type="button" data-confirm-cancel autofocus>Cancelar</button>
+    <button class="btn btn-danger" type="button" data-confirm-accept>Confirmar</button>
+  </div>
+</dialog>
+</body>
+</html>

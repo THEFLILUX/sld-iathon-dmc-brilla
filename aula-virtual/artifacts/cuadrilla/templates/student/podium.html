@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block content_class %} narrow{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('student_home') }}">Mis cursos</a> › <a href="{{ url_for('student_course', curso_id=curso.id) }}">{{ curso.nombre }}</a> › Podio</p>
+<h1 class="page-title">Podio del curso</h1>
+<p class="page-sub">Top 5 por EXP, en tiempo real. Los 3 primeros reciben certificado y Coins al cerrar el curso.</p>
+{% include "student/_course_nav.html" %}
+<section class="card">
+  {% if top and top[0].exp > 0 %}
+  <ol class="podium">
+    {% for f in top %}
+    <li class="{{ 'me' if mio and f.alumno_id == mio.alumno_id }}"><span class="place">{{ f.puesto }}</span><span>{{ f.nombre }} {{ f.apellido }}</span><span class="pts">{{ f.exp|miles }} EXP</span></li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <div class="empty"><h3>El podio aún está vacío</h3><p>Resuelve tu primer quiz para aparecer.</p></div>
+  {% endif %}
+  {% if mio %}
+  <p style="margin-top:14px"><strong>Tu posición: #{{ mio.puesto }}</strong> con {{ mio.exp|miles }} EXP.</p>
+  {% endif %}
+  <p class="tiny muted">Empates: queda arriba quien llegó primero a ese EXP. El EXP se reinicia en cada curso y no se canjea.</p>
+</section>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block notifications %}
+{{ super() }}
+{% if dni and not alumno %}{% call notification('error') %}No hay un usuario con ese DNI.{% endcall %}{% endif %}
+{% endblock %}
+{% block content %}
+<h1 class="page-title">Movimientos de EXP y Coins</h1>
+<p class="page-sub">Historial completo de un alumno. El saldo y el EXP son la suma de sus movimientos.</p>
+<form method="get" class="card btn-row" style="margin-top:0"><input name="dni" value="{{ dni }}" placeholder="DNI del alumno" required maxlength="12" style="flex:1"><button class="btn btn-sm" type="submit">Ver movimientos</button></form>
+{% if alumno %}
+<section class="card mt-module">
+  <h2 class="card-title">{{ alumno.nombre_completo }} <span class="chip">Saldo: {{ saldo|miles }} Coins</span></h2>
+  {% if filas %}
+  <div class="table-wrap"><table class="table cards small">
+    <thead><tr><th>Fecha</th><th>Tipo</th><th>Origen</th><th>Curso</th><th>Referencia</th><th class="num">Cantidad</th></tr></thead>
+    <tbody>{% for m, curso_nombre in filas %}
+      <tr><td data-label="Fecha">{{ m.creado_en|fecha_hora }}</td><td data-label="Tipo">{{ m.tipo }}</td><td data-label="Origen">{{ origen.get(m.origen, m.origen) }}{% if m.motivo %}<div class="tiny muted">{{ m.motivo }}</div>{% endif %}</td>
+        <td data-label="Curso">{{ curso_nombre or '—' }}</td><td data-label="Referencia"><code>{{ m.referencia }}</code></td>
+        <td data-label="Cantidad" class="num {{ 'pos' if m.cantidad > 0 else 'neg' }}">{{ '%+d'|format(m.cantidad) }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="muted">Sin movimientos.</p>{% endif %}
+</section>
+{% endif %}
+{% endblock %}

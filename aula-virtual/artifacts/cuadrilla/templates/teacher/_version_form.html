@@ -1,0 +1,19 @@
+{# Fields of one challenge version. Expects `campos` (prepared in web/teacher.py). #}
+<label>Tipo de reto
+  <select name="tipo" data-tipo-select>
+    {% for t, texto in [('alternativas', 'Alternativas'), ('completar', 'Completar'), ('definir', 'Definir con tus palabras'), ('caso', 'Caso con justificación')] %}
+    <option value="{{ t }}" {% if t == campos.tipo %}selected{% endif %}>{{ texto }}</option>{% endfor %}
+  </select>
+  <span class="hint">Alternativas y completar son verificables (cuentan para Coins). Definir y caso se califican por puntos clave.</span>
+</label>
+<label>Enunciado<textarea name="enunciado" rows="3" required maxlength="4000">{{ campos.enunciado }}</textarea></label>
+<label data-para-tipo="alternativas">Alternativas <span class="hint">una por línea, de 3 a 6</span><textarea name="opciones" rows="4">{{ campos.opciones }}</textarea></label>
+<label>Respuesta correcta <span class="hint">en alternativas, copia exactamente una de ellas; en abiertas, una respuesta modelo</span><textarea name="respuesta_correcta" rows="2">{{ campos.respuesta_correcta }}</textarea></label>
+<label data-para-tipo="completar">Otras respuestas aceptadas <span class="hint">una por línea</span><textarea name="respuestas_aceptadas" rows="2">{{ campos.respuestas_aceptadas }}</textarea></label>
+<label data-para-tipo="definir caso">Puntos clave <span class="hint">de 2 a 4, uno por línea</span><textarea name="puntos_clave" rows="3">{{ campos.puntos_clave }}</textarea></label>
+<label>Explicación<textarea name="explicacion" rows="2" required maxlength="3000">{{ campos.explicacion }}</textarea></label>
+<div class="row-3">
+  <label>Pista 1 <span class="hint">orienta</span><textarea name="pista_1" rows="2">{{ campos.pista_1 }}</textarea></label>
+  <label>Pista 2 <span class="hint">más concreta</span><textarea name="pista_2" rows="2">{{ campos.pista_2 }}</textarea></label>
+  <label>Pista 3 <span class="hint">casi la respuesta</span><textarea name="pista_3" rows="2">{{ campos.pista_3 }}</textarea></label>
+</div>

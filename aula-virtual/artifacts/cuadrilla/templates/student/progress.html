@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_macros.html" import estado_tema, hud with context %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('student_home') }}">Mis cursos</a> › <a href="{{ url_for('student_course', curso_id=curso.id) }}">{{ curso.nombre }}</a> › Mi progreso</p>
+<h1 class="page-title">Mi progreso</h1>
+<p class="page-sub">Qué dominas, qué va en progreso y qué conviene repasar.</p>
+{% include "student/_course_nav.html" %}
+{{ hud(exp, coins, puesto) }}
+<div class="kpis">
+  {% for e in ('dominado', 'en_progreso', 'debil', 'sin_datos') %}
+  <div class="stat"><span class="stat-n">{{ datos.conteo.get(e, 0) }}</span><span class="stat-l">{{ ESTADO_TEMA[e] }}</span></div>
+  {% endfor %}
+</div>
+<section class="card" aria-labelledby="t-temas">
+  <h2 class="card-title" id="t-temas">{{ icon('chart') }} Temas del curso</h2>
+  <div class="table-wrap">
+  <table class="table cards">
+    <thead><tr><th>Tema</th><th>Estado</th><th>Dominio</th><th>Nivel actual</th><th>Próximo repaso</th></tr></thead>
+    <tbody>
+    {% for f in datos.temas %}
+    <tr>
+      <td data-label="Tema"><strong>{{ f.tema.etiqueta }}</strong>{% if f.tema.modulo %}<div class="tiny muted">{{ f.tema.modulo }}</div>{% endif %}</td>
+      <td data-label="Estado">{{ estado_tema(f.estado) }}</td>
+      <td data-label="Dominio">{% if f.dominio is not none %}<div class="mastery-value"><progress class="bar" value="{{ f.dominio }}" max="100" aria-label="Dominio de {{ f.tema.etiqueta }}">{{ f.dominio|round|int }}%</progress><span class="small">{{ f.dominio|round|int }}%</span></div>{% else %}<span class="muted">—</span>{% endif %}</td>
+      <td data-label="Nivel actual">{{ NIVEL[f.nivel] }}</td>
+      <td data-label="Próximo repaso">{% if f.proximo_repaso %}{% if f.repaso_vencido %}<span class="chip chip-warn">Hoy</span>{% else %}{{ f.proximo_repaso|fecha }}{% endif %}{% else %}<span class="muted">—</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <p class="tiny muted">El dominio es un promedio de tus últimos intentos de cada tema: pesan más los niveles altos y los intentos recientes. «Dominado» pide 80 % o más en el nivel máximo del tema y un repaso acertado a 7 días o más.</p>
+</section>
+<section class="card mt-module" aria-labelledby="t-exp">
+  <h2 class="card-title" id="t-exp">{{ icon('star') }} Historial de EXP</h2>
+  {% if historial_exp %}
+  <ul class="moves">{% for m in historial_exp %}<li><span>{{ origen.get(m.origen, m.origen) }}<small>{{ m.creado_en|fecha_hora }}{% if m.motivo %} · {{ m.motivo }}{% endif %}</small></span><span class="{{ 'pos' if m.cantidad > 0 else 'neg' }}">{{ '%+d'|format(m.cantidad) }}</span></li>{% endfor %}</ul>
+  {% else %}<p class="muted">Todavía no tienes EXP en este curso.</p>{% endif %}
+</section>
+{% endblock %}

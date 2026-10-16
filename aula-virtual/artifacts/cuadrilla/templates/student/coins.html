@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block content_class %} narrow{% endblock %}
+{% block content %}
+<h1 class="page-title">Mis Coins</h1>
+<p class="page-sub">Tus DMC Coins se acumulan entre todos tus cursos, no vencen y se canjean por descuento.</p>
+<section class="card" aria-labelledby="t-saldo">
+  <h2 class="card-title" id="t-saldo">{{ icon('coin') }} Saldo</h2>
+  <p class="balance">{{ saldo|miles }} <span class="small muted">Coins</span></p>
+  <ul class="redeem" aria-label="Tabla de canje">
+    {% for o in opciones %}
+      <li>{% if o.alcanza %}<a class="redeem-option {{ 'sel' if elegido and elegido.porcentaje == o.porcentaje }}" href="{{ url_for('student_coins') }}?porcentaje={{ o.porcentaje }}#canje"{% if elegido and elegido.porcentaje == o.porcentaje %} aria-current="true"{% endif %}><span class="pct">{{ o.porcentaje }} %</span><small>{{ o.coins|miles }} Coins</small>{% if elegido and elegido.porcentaje == o.porcentaje %}<small class="redeem-selected">Seleccionado</small>{% endif %}</a>
+      {% else %}<span class="redeem-option" aria-disabled="true"><span class="pct">{{ o.porcentaje }} %</span><small>{{ o.coins|miles }} Coins</small></span>{% endif %}</li>
+    {% endfor %}
+  </ul>
+  {% if faltan > 0 %}
+    <button class="btn" type="button" disabled>Canjear Coins</button>
+    <p class="small muted">Te faltan {{ faltan|miles }} Coins para el 30 %.</p>
+  {% elif not elegido %}
+    <a class="btn" href="{{ url_for('student_coins') }}?porcentaje={{ (opciones|selectattr('alcanza')|list|last).porcentaje }}#canje">Canjear Coins</a>
+    <p class="small muted">Elige un porcentaje de la tabla.</p>
+  {% endif %}
+</section>
+
+{% if elegido %}
+<section class="card mt-module" id="canje" aria-labelledby="t-canje">
+  <h2 class="card-title" id="t-canje">Confirmar canje</h2>
+  <ul class="breakdown">
+    <li><span>Descuento</span><strong>{{ elegido.porcentaje }} %</strong></li>
+    <li><span>Coins que se descontarán</span><strong>{{ elegido.coins|miles }}</strong></li>
+    <li><span>Saldo que quedará</span><strong>{{ (saldo - elegido.coins)|miles }}</strong></li>
+  </ul>
+  <form method="post" action="{{ url_for('student_redeem') }}" class="btn-row">
+    <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="porcentaje" value="{{ elegido.porcentaje }}">
+    <input type="hidden" name="confirmo" value="si">
+    <button class="btn" type="submit">Confirmar canje</button>
+    <a class="btn btn-ghost" href="{{ url_for('student_coins') }}">Cancelar</a>
+  </form>
+  <p class="tiny muted">Un canje confirmado no se deshace desde la plataforma. Las Coins que sobran siguen acumulándose.</p>
+</section>
+{% endif %}
+
+<section class="card mt-module" aria-labelledby="t-hist">
+  <h2 class="card-title" id="t-hist">Historial</h2>
+  {% if historial %}
+  <ul class="moves">{% for m in historial %}<li><span>{{ origen.get(m.origen, m.origen) }}<small>{{ m.creado_en|fecha_hora }}{% if m.curso_id and nombres_cursos.get(m.curso_id) %} · {{ nombres_cursos[m.curso_id] }}{% endif %}{% if m.motivo %} · {{ m.motivo }}{% endif %}</small></span><span class="{{ 'pos' if m.cantidad > 0 else 'neg' }}">{{ '%+d'|format(m.cantidad) }}</span></li>{% endfor %}</ul>
+  {% else %}<p class="muted">Aún no tienes movimientos. Puedes ganar hasta 6 Coins al <a href="{{ url_for('user_profile') }}">completar tu perfil</a>, además de las Coins por quizzes, retos semanales y el podio final. Los quizzes necesitan alcanzar 75 puntos para Coins: las pistas reducen el puntaje del reto y las respuestas abiertas no entran en ese cálculo.</p>{% endif %}
+</section>
+{% endblock %}

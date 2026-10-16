@@ -1,0 +1,49 @@
+{% from "_icons.html" import icon %}
+
+{%- macro csrf_field() -%}<input type="hidden" name="_csrf" value="{{ csrf }}">{%- endmacro -%}
+
+{%- macro post_button(url, label, cls='btn btn-sm', fields={}, confirm=None, ico=None) -%}
+<form method="post" action="{{ url }}" class="inline"{% if confirm %} data-confirm="{{ confirm }}"{% endif %}>
+  {{ csrf_field() }}{% for k, v in fields.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+  <button type="submit" class="{{ cls }}">{% if ico %}{{ icon(ico) }}{% endif %}{{ label }}</button>
+</form>
+{%- endmacro -%}
+
+{%- macro estado_tema(estado) -%}<span class="chip chip-{{ estado }}">{{ ESTADO_TEMA.get(estado, estado) }}</span>{%- endmacro -%}
+
+{%- macro nivel(n) -%}<span class="chip chip-info" title="{{ BLOOM.get(n, '') }}">{{ NIVEL.get(n, n) }}</span>{%- endmacro -%}
+
+{%- macro estado_clase(estado) -%}
+{%- set m = {'procesando': ('chip-warn', 'Procesando'), 'por_validar': ('chip-cyan', 'Por validar'), 'publicada': ('chip-ok', 'Publicada'), 'error': ('chip-err', 'Error')} -%}
+<span class="chip {{ m[estado][0] }}">{{ m[estado][1] }}</span>
+{%- endmacro -%}
+
+{%- macro estado_reto(estado) -%}
+{%- set m = {'generando': ('chip-warn', 'Generando'), 'propuesto': ('chip-cyan', 'Propuesto'), 'aprobado': ('chip-ok', 'Aprobado'), 'editado': ('chip-ok', 'Editado'), 'rechazado': ('chip-err', 'Rechazado'), 'retirado': ('chip-err', 'Retirado'), 'error': ('chip-err', 'Error')} -%}
+<span class="chip {{ m[estado][0] }}">{{ m[estado][1] }}</span>
+{%- endmacro -%}
+
+{%- macro tipo_reto(tipo) -%}
+{%- set m = {'alternativas': 'Alternativas', 'completar': 'Completar', 'definir': 'Definir con tus palabras', 'caso': 'Caso con justificación', 'codigo': 'Código'} -%}{{ m.get(tipo, tipo) }}
+{%- endmacro -%}
+
+{%- macro hud(exp, coins, puesto) -%}
+<div class="hud" role="group" aria-label="Tu avance en el curso">
+  <div class="stat"><span class="stat-n">{{ exp|miles }}</span><span class="stat-l">EXP del curso</span></div>
+  <div class="stat"><span class="stat-n">{{ coins|miles }}</span><span class="stat-l">DMC Coins (tu cuenta)</span></div>
+  <div class="stat"><span class="stat-n">{{ '#' ~ puesto if puesto else '—' }}</span><span class="stat-l">Puesto en el podio</span></div>
+</div>
+{%- endmacro -%}
+
+{%- macro version_detalle(v) -%}
+<p class="prewrap"><strong>{{ v.enunciado }}</strong></p>
+<dl class="kv">
+  <dt>Tipo</dt><dd>{{ tipo_reto(v.tipo) }}</dd>
+  {% if v.opciones %}<dt>Alternativas</dt><dd>{% for o in v.opciones %}<div class="{{ 'opt-ok' if o == v.respuesta_correcta }}">{{ '✓ ' if o == v.respuesta_correcta else '• ' }}{{ o }}</div>{% endfor %}</dd>{% endif %}
+  {% if v.tipo == 'completar' %}<dt>Respuestas aceptadas</dt><dd>{{ v.respuestas_aceptadas|join(' · ') }}</dd>{% endif %}
+  {% if v.puntos_clave %}<dt>Puntos clave</dt><dd><ol class="small" style="margin:0;padding-left:18px">{% for p in v.puntos_clave %}<li>{{ p }}</li>{% endfor %}</ol></dd>{% endif %}
+  {% if v.tipo in ('definir', 'caso') and v.respuesta_correcta %}<dt>Respuesta modelo</dt><dd class="prewrap">{{ v.respuesta_correcta }}</dd>{% endif %}
+  <dt>Explicación</dt><dd class="prewrap">{{ v.explicacion }}</dd>
+  {% for p in v.pistas %}<dt>Pista {{ loop.index }}</dt><dd>{{ p }}</dd>{% endfor %}
+</dl>
+{%- endmacro -%}

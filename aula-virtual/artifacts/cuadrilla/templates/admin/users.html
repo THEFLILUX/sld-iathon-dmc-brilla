@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block content %}
+<h1 class="page-title">Usuarios y roles</h1>
+<p class="page-sub">Alta con DNI, rol y curso. El docente solo ve sus cursos; el alumno, su propio progreso.</p>
+<div class="grid">
+  <section class="card" aria-labelledby="t-lista">
+    <h2 class="card-title" id="t-lista">{{ icon('users') }} Usuarios</h2>
+    <form method="get" class="btn-row" style="margin-top:0"><input name="q" value="{{ q }}" placeholder="Buscar por DNI, nombre o apellido" style="flex:1"><button class="btn btn-sm btn-ghost" type="submit">Buscar</button></form>
+    <div class="table-wrap" style="margin-top:8px"><table class="table cards small">
+      <thead><tr><th>Usuario</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
+      <tbody>{% for u in usuarios %}
+        <tr>
+          <td data-label="Usuario"><strong>{{ u.apellido }}, {{ u.nombre }}</strong><div class="tiny muted">DNI {{ u.dni }} · alias {{ u.alias }}</div></td>
+          <td data-label="Rol">{{ {'alumno': 'Alumno', 'docente': 'Docente', 'admin': 'Admin'}[u.rol] }}</td>
+          <td data-label="Estado">{% if not u.activo %}<span class="chip chip-err">Inactivo</span>{% else %}<span class="chip chip-ok">Activo</span>{% endif %}
+            {% if u.coins_pausadas %}<span class="chip chip-warn">Coins en pausa</span>{% endif %}
+            {% if u.rol == 'alumno' %}<div class="tiny muted">{{ 'Consentimiento ' ~ (u.consentimiento_en|fecha) if u.consentimiento_en else 'Sin consentimiento' }}</div>{% endif %}</td>
+          <td data-label="Acciones">
+            <a class="btn btn-sm btn-ghost" href="{{ url_for('admin_user_profile', usuario_id=u.id) }}">Ver perfil</a>
+            <form method="post" action="{{ url_for('admin_user_update', usuario_id=u.id) }}" class="btn-row" style="margin:0">
+              <input type="hidden" name="_csrf" value="{{ csrf }}">
+              <button class="btn btn-sm btn-ghost" name="accion" value="{{ 'desactivar' if u.activo else 'activar' }}">{{ 'Desactivar' if u.activo else 'Activar' }}</button>
+              {% if u.rol == 'alumno' %}<button class="btn btn-sm btn-ghost" name="accion" value="{{ 'reanudar_coins' if u.coins_pausadas else 'pausar_coins' }}">{{ 'Reanudar Coins' if u.coins_pausadas else 'Pausar Coins' }}</button>{% endif %}
+            </form>
+            <details class="small"><summary style="cursor:pointer;color:var(--primary)">Nueva contraseña</summary>
+              <form method="post" action="{{ url_for('admin_user_update', usuario_id=u.id) }}" class="btn-row">
+                <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="accion" value="password">
+                <input type="password" name="password" minlength="8" required autocomplete="new-password" placeholder="Mínimo 8 caracteres" style="flex:1"><button class="btn btn-sm" type="submit">Guardar</button>
+              </form></details>
+          </td>
+        </tr>
+      {% endfor %}</tbody>
+    </table></div>
+  </section>
+  <aside class="card" aria-labelledby="t-nuevo">
+    <h2 class="card-title" id="t-nuevo">Nuevo usuario</h2>
+    <form method="post" action="{{ url_for('admin_user_create') }}" class="form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <label>DNI<input name="dni" required maxlength="12" inputmode="numeric" value="{{ enviado.dni if enviado else '' }}"></label>
+      <label>Nombre<input name="nombre" required maxlength="100" value="{{ enviado.nombre if enviado else '' }}"></label>
+      <label>Apellido<input name="apellido" required maxlength="100" value="{{ enviado.apellido if enviado else '' }}"></label>
+      <label>Rol<select name="rol">{% for r, t in [('alumno', 'Alumno'), ('docente', 'Docente'), ('admin', 'Administrador')] %}<option value="{{ r }}" {% if enviado and enviado.rol == r %}selected{% endif %}>{{ t }}</option>{% endfor %}</select></label>
+      <label>Curso <span class="hint">(opcional)</span><select name="curso_id"><option value="">—</option>{% for c in cursos %}<option value="{{ c.id }}">{{ c.nombre }}</option>{% endfor %}</select></label>
+      <label>Contraseña inicial<input type="password" name="password" minlength="8" required autocomplete="new-password"></label>
+      <button class="btn" type="submit">Crear usuario</button>
+    </form>
+  </aside>
+</div>
+{% endblock %}

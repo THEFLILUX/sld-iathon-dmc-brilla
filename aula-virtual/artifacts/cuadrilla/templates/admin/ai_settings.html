@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_ai.html" import ai_button with context %}
+{% block content %}
+<h1 class="page-title">Inteligencia artificial</h1>
+<p class="page-sub">Elige el proveedor para quizzes, resúmenes, calificaciones, transcripciones y Asistente Brilla.</p>
+<section class="card" aria-labelledby="t-activa">
+  <h2 class="card-title" id="t-activa">{{ icon('check') }} Configuración activa</h2>
+  <p><strong>{{ config_ia.etiqueta }}</strong> · <code>{{ config_ia.modelo }}</code></p>
+  <p class="small muted">Transcripción: <code>{{ config_ia.modelo_audio }}</code>. Los trabajos en curso conservan su configuración; el cambio se aplica a las nuevas solicitudes.</p>
+</section>
+<div class="grid mt-module">
+  <section class="card" aria-labelledby="t-proveedor">
+    <h2 class="card-title" id="t-proveedor">{{ icon('settings') }} Proveedor y modelos</h2>
+    <form method="post" action="{{ url_for('admin_ai_save') }}" class="form">
+      <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="version" value="{{ form.version }}">
+      <label for="ai-provider">Usar en toda la plataforma<select id="ai-provider" name="proveedor" required>
+        <option value="openai"{% if form.proveedor == 'openai' %} selected{% endif %}>OpenAI · API key del servidor</option>
+        <option value="vertex"{% if form.proveedor == 'vertex' %} selected{% endif %}>Gemini · Vertex AI de Google Cloud</option>
+      </select></label>
+      <fieldset class="ai-provider-fields"><legend>OpenAI</legend>
+        <label for="ai-openai">Modelo de texto<input id="ai-openai" name="modelo_openai" value="{{ form.modelo_openai }}" maxlength="80" required autocomplete="off"></label>
+        <label for="ai-asr">Modelo de transcripción<input id="ai-asr" name="audio_openai" value="{{ form.audio_openai }}" maxlength="80" required autocomplete="off"></label>
+        <p class="tiny muted">{{ 'La API key está configurada en el servidor.' if settings.OPENAI_API_KEY else 'Falta configurar OPENAI_API_KEY en el servidor.' }}</p>
+      </fieldset>
+      <fieldset class="ai-provider-fields"><legend>Gemini con Vertex AI</legend>
+        <label for="ai-vertex">Modelo de texto y audio<input id="ai-vertex" name="modelo_vertex" value="{{ form.modelo_vertex }}" maxlength="80" required autocomplete="off" aria-describedby="ai-vertex-help"></label>
+        <p class="tiny muted" id="ai-vertex-help">Modelo inicial: gemini-3.5-flash-lite. Puedes cambiar su identificador para utilizar otra versión compatible.</p>
+        <p class="small">Proyecto: <strong>{{ config_ia.proyecto or 'Pendiente de configurar en el servidor' }}</strong><br>Ubicación: <strong>{{ config_ia.ubicacion }}</strong></p>
+        <p class="tiny muted">Usa la cuenta de servicio de Google Cloud. No requiere una API key de Gemini.</p>
+      </fieldset>
+      <p class="small muted">Se comprobarán texto estructurado y un audio breve antes de activar. Esta comprobación tiene un consumo pequeño de IA.</p>
+      <div class="btn-row">
+        {{ ai_button('Probar conexión', cls='btn btn-ghost', name='accion', value='probar') }}
+        {{ ai_button('Probar y activar', name='accion', value='activar') }}
+      </div>
+    </form>
+  </section>
+  <aside class="stack">
+    <section class="card"><h2 class="card-title">{{ icon('lock') }} Acceso administrativo</h2><p class="small">Solo administración puede cambiar el proveedor. Las credenciales se conservan en el servidor y no se muestran ni se guardan en este formulario.</p><p class="small">El cambio conserva los quizzes, resúmenes y calificaciones existentes. Cada llamada nueva registra el proveedor y modelo utilizados.</p></section>
+    <section class="card"><h2 class="card-title">{{ icon('clock') }} Últimos cambios</h2>
+      {% if historial %}<ul class="list">{% for cambio, autor in historial %}<li><div><strong>{{ 'OpenAI' if cambio.proveedor == 'openai' else 'Gemini · Vertex AI' }}</strong><div class="small">{{ cambio.opciones.modelo_openai if cambio.proveedor == 'openai' else cambio.opciones.modelo_vertex }}</div><div class="tiny muted">{{ cambio.creado_en|fecha_hora }} · {{ autor.nombre_completo if autor else 'Administración' }}</div></div></li>{% endfor %}</ul>
+      {% else %}<p class="small muted">Se está utilizando la configuración inicial del servidor.</p>{% endif %}
+    </section>
+  </aside>
+</div>
+{% endblock %}

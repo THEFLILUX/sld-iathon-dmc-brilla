@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% from "_ai.html" import ai_button with context %}
+{% from "_icons.html" import icon %}
+{% block scripts %}<script src="{{ url_for('static', path='js/teacher.js') }}?v=20261014-brilla" defer></script>{% endblock %}
+{% block content_class %} narrow{% endblock %}
+{% block notifications %}
+{{ super() }}
+{% if not settings.ai_enabled %}{% call notification('warning') %}Falta <code>{{ settings.variable_clave() }}</code> en el archivo <code>.env</code>: la clase se guardará, pero el quiz no podrá pregenerarse hasta configurarla.{% endcall %}{% endif %}
+{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('teacher_home') }}">Mis cursos</a> › <a href="{{ url_for('teacher_course', curso_id=curso.id) }}">{{ curso.nombre }}</a> › Subir clase</p>
+<h1 class="page-title">Subir clase</h1>
+<p class="page-sub">El sistema anonimiza el transcript, lo relaciona con la malla y pregenera un quiz de 4 retos. Tendrás 1 hora para validarlo.</p>
+{% include "teacher/_course_nav.html" %}
+<form method="post" action="{{ url_for('teacher_upload_post', curso_id=curso.id) }}" enctype="multipart/form-data" class="card form" data-upload>
+  <input type="hidden" name="_csrf" value="{{ csrf }}">
+  <div class="row-3">
+    <label>Número de clase<input type="number" name="numero" min="1" max="500" required value="{{ form.numero }}"></label>
+    <label>Fecha<input type="date" name="fecha" required value="{{ form.fecha }}"></label>
+    <label>Título <span class="hint">(opcional)</span><input name="titulo" maxlength="250" value="{{ form.titulo or '' }}"></label>
+  </div>
+  <fieldset>
+    <legend>Contenido de la clase</legend>
+    <label>Video, audio o transcript
+      <input type="file" name="fuente" accept=".mp4,.mov,.webm,.mp3,.wav,.m4a,.txt,.vtt,.md">
+      <span class="hint">mp4, mov, webm, mp3, wav, m4a, o transcript en txt, vtt o md. Máximo {{ settings.MAX_UPLOAD_MB }} MB. Un video se transcribe automáticamente.</span></label>
+    <label>…o pega el transcript<textarea name="transcript_texto" rows="5" maxlength="300000">{{ form.transcript_texto or '' }}</textarea></label>
+    {% if settings.DEMO_MODE %}<label class="check"><input type="checkbox" name="usar_ejemplo" value="si"> Usar el transcript disponible (master class de Python para analistas)</label>{% endif %}
+  </fieldset>
+  <label>Recursos adicionales <span class="hint">(opcional: PDF, slides exportadas a PDF o texto; tienen prioridad para ejemplos y casos)</span>
+    <input type="file" name="recursos" multiple accept=".pdf,.txt,.md"></label>
+  <label>Tarea <span class="hint">(opcional: se muestra al alumno con el botón LISTO, sin EXP ni Coins)</span>
+    <textarea name="tarea" rows="2" maxlength="2000">{{ form.tarea or '' }}</textarea></label>
+  <div class="btn-row">{{ ai_button('Procesar clase', enabled=settings.ai_enabled, submit_hook=true) }}<span class="small muted" data-status aria-live="polite"></span></div>
+</form>
+{% endblock %}

@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_macros.html" import hud with context %}
+{% from "_class_summary.html" import contenido_resumen %}
+{% block notifications %}
+{{ super() }}
+{% if curso.estado == 'cerrado' %}{% call notification('info', title='Curso cerrado') %}Puedes revisar tu progreso, pero ya no se suman EXP.{% endcall %}{% endif %}
+{% for m in mensajes %}{% call notification('info') %}{{ m.texto }}{% endcall %}{% endfor %}
+{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('student_home') }}">Mis cursos</a> › {{ curso.nombre }}</p>
+<div class="course-head">
+  <span class="course-badge sm cover-{{ curso|color_curso }}" aria-hidden="true">{{ curso.nombre|sigla }}</span>
+  <div><h1 class="page-title">{{ curso.nombre }}</h1>
+    <p class="page-sub">Refuerza lo que viste en clase en pocos minutos.</p></div>
+</div>
+{% if cursos|length > 1 %}
+<nav class="course-switch" aria-label="Cambiar de curso">
+  {% for c in cursos %}<a href="{{ url_for('student_course', curso_id=c.id) }}" class="{{ 'active' if c.id == curso.id }}" {% if c.id == curso.id %}aria-current="page"{% endif %}><span class="dot cover-{{ c|color_curso }}" aria-hidden="true"></span>{{ c.nombre }}</a>{% endfor %}
+</nav>
+{% endif %}
+{% include "student/_course_nav.html" %}
+{{ hud(exp, coins, puesto) }}
+
+
+<div class="grid">
+  <div class="stack">
+    <section class="card" aria-labelledby="t-quizzes">
+      <h2 class="card-title" id="t-quizzes">{{ icon('book') }} Quizzes de clase</h2>
+      {% if quizzes %}
+      <ul class="list">
+        {% for f in quizzes %}
+        <li class="quiz-row">
+          <div class="grow">
+            <div class="list-title">QUIZ CLASE {{ f.clase.numero }} · {{ f.clase.fecha|fecha }}</div>
+            {% if f.clase.titulo %}<div class="small muted">{{ f.clase.titulo }}</div>{% endif %}
+          </div>
+          {% if f.estado == 'nuevo' %}
+            <span class="chip chip-cyan">Nuevo</span>
+            {% if curso.estado == 'activo' %}
+            <form method="post" action="{{ url_for('student_generate', curso_id=curso.id, clase_id=f.clase.id) }}" class="inline">
+              <input type="hidden" name="_csrf" value="{{ csrf }}"><button class="btn btn-sm" type="submit">Generar</button>
+            </form>
+            {% endif %}
+          {% elif f.estado == 'en_curso' %}
+            <span class="chip chip-info">En curso {{ f.respondidos }}/{{ f.total }}</span>
+            <a class="btn btn-sm" href="{{ url_for('student_quiz', curso_id=curso.id, clase_id=f.clase.id) }}">Continuar</a>
+          {% else %}
+            <span class="chip chip-ok">Completado</span>
+            <a class="btn btn-sm btn-ghost" href="{{ url_for('student_quiz_final', curso_id=curso.id, clase_id=f.clase.id) }}">Ver resultados</a>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="empty"><h3>Aún no hay quizzes</h3><p>Aparecerán cuando se suba tu primera clase.</p></div>
+      {% endif %}
+    </section>
+
+    <section class="card" id="resumenes" aria-labelledby="t-resumenes">
+      <h2 class="card-title" id="t-resumenes"><img class="summary-mascot" src="{{ url_for('static', path='img/brilla-ai.png') }}" alt="" width="28" height="28"> Resúmenes de clase <span class="chip chip-info">IA</span></h2>
+      <p class="small muted">Repasa lo explicado en cada sesión. Brilla prepara estos resúmenes a partir del transcript de la clase.</p>
+      {% for f in quizzes %}
+        {% set resumen = resumenes.get(f.clase.id) %}
+        {% if resumen and resumen.estado == 'listo' and resumen.contenido %}
+        <details class="class-summary" name="resumenes-clase"{% if loop.first %} open{% endif %}>
+          <summary><span><strong>{{ f.clase.nombre }}</strong><span class="small muted summary-date">{{ f.clase.fecha|fecha }}</span></span><span class="small summary-toggle"><span class="when-closed">Leer resumen</span><span class="when-open">Cerrar resumen</span></span></summary>
+          {{ contenido_resumen(resumen.contenido) }}
+        </details>
+        {% else %}
+        <div class="class-summary summary-status"><h3>{{ f.clase.nombre }}</h3>
+          <p class="small muted">{% if resumen and resumen.estado == 'error' %}El resumen aún no está disponible. Tu docente puede reintentar su generación.{% elif resumen %}Estamos preparando el resumen de esta clase. Estará disponible en unos minutos.{% else %}El resumen de esta clase aún no está disponible.{% endif %}</p>
+        </div>
+        {% endif %}
+      {% else %}
+      <p class="small muted">Los resúmenes aparecerán aquí cuando tu docente publique las clases.</p>
+      {% endfor %}
+    </section>
+
+    {% if tareas %}
+    <section class="card" id="tareas" aria-labelledby="t-tareas">
+      <h2 class="card-title" id="t-tareas">{{ icon('check') }} Tareas</h2>
+      <ul class="list">
+        {% for c in tareas %}
+        <li><div class="grow"><div class="list-title">TAREA CLASE {{ c.numero }}</div><div class="small prewrap">{{ c.tarea }}</div></div>
+          {% if c.id in hechas %}<span class="task-done">{{ icon('check') }} Lista</span>
+          {% else %}
+          <form method="post" action="{{ url_for('student_task_done', curso_id=curso.id, clase_id=c.id) }}" class="inline">
+            <input type="hidden" name="_csrf" value="{{ csrf }}"><button class="btn btn-sm btn-ghost" type="submit">LISTO</button>
+          </form>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      <p class="tiny muted">Marcar una tarea no da EXP ni Coins: solo te ayuda a llevar el control.</p>
+    </section>
+    {% endif %}
+  </div>
+
+  <aside class="stack">
+    <section class="card weekly" aria-labelledby="t-semanal">
+      <h2 class="card-title" id="t-semanal">{{ icon('star') }} RETO SEMANAL
+        {% if estado_semanal == 'disponible' %}<span class="chip chip-cyan push">Disponible</span>
+        {% elif estado_semanal == 'completado' %}<span class="chip chip-ok push">Completado esta semana</span>{% endif %}
+      </h2>
+      {% if estado_semanal == 'disponible' %}
+        <p>Un reto más difícil. Vale más EXP.</p>
+        <a class="btn" href="{{ url_for('student_weekly', curso_id=curso.id) }}">Empezar</a>
+      {% elif estado_semanal == 'completado' %}
+        <p>Ya lo resolviste. El próximo llega el lunes a las 00:00 (hora Lima).</p>
+        <a class="btn" href="{{ url_for('student_weekly', curso_id=curso.id) }}">Ver resultado</a>
+      {% elif estado_semanal == 'preparando' %}
+        <p class="muted">Estamos preparando el reto de esta semana. Vuelve en unos minutos.</p>
+      {% else %}
+        <p class="muted">No hay reto semanal disponible por ahora.</p>
+      {% endif %}
+    </section>
+  </aside>
+</div>
+{% endblock %}

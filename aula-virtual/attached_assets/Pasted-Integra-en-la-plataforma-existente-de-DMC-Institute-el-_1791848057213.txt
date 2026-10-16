@@ -1,0 +1,154 @@
+Integra en la plataforma existente de DMC Institute el módulo de IA educativa para generar resumen, retos, quizzes y DMC Coins usando el transcript de cada clase.
+
+Contexto:
+La plataforma ya existe. No la rehagas desde cero. No cambies el diseño general ni elimines funcionalidades actuales. No crees una app paralela en Streamlit. Integra esta funcionalidad dentro del flujo actual de "Clases / Grabaciones" y "Práctica".
+
+Ya existe o debe existir un transcript asociado a cada clase, generado por el módulo anterior de transcripción. Usa ese transcript como fuente principal.
+
+Usa la API key de OpenAI que ya está precargada en Secrets. No me pidas otra key. Usa la variable existente OPENAI_API_KEY o detecta cómo ya está configurada en el proyecto.
+
+Modelo:
+Usa OpenAI con el modelo gpt-6-luna para generar resumen, retos, quizzes y evaluación de respuestas.
+
+Objetivo:
+A partir del transcript de una clase, la plataforma debe generar:
+1. resumen corto;
+2. resumen completo;
+3. conceptos clave;
+4. retos prácticos;
+5. quizzes;
+6. rúbricas;
+7. DMC Coins sugeridos;
+8. evaluación automática de respuestas del alumno;
+9. asignación de DMC Coins si el alumno responde bien.
+
+Requisitos funcionales para docente/admin:
+1. En el detalle de una clase con transcript, agrega un botón "Generar resumen y práctica con IA".
+2. Al presionar el botón, usa el transcript de esa clase.
+3. Genera y muestra:
+   - resumen corto;
+   - resumen completo;
+   - conceptos clave;
+   - 3 retos prácticos;
+   - 3 preguntas tipo quiz;
+   - respuesta esperada para cada reto;
+   - rúbrica de evaluación;
+   - DMC Coins sugeridos por cada actividad.
+4. Permite revisar el contenido antes de publicarlo.
+5. Agrega botón "Publicar práctica".
+6. Solo cuando se publique, los alumnos deben ver los retos/quizzes en su vista.
+
+Requisitos funcionales para alumno:
+1. En la sección "Práctica" o dentro de la clase publicada, el alumno debe ver los retos y quizzes disponibles.
+2. El alumno puede responder cada reto.
+3. El alumno puede responder cada quiz.
+4. Al enviar una respuesta:
+   - la plataforma evalúa la respuesta con gpt-6-luna usando la rúbrica;
+   - devuelve puntaje de 0 a 10;
+   - muestra feedback claro;
+   - si el puntaje es mayor o igual a 7, asigna los DMC Coins del reto;
+   - si el puntaje es menor a 7, no asigna coins y muestra qué mejorar.
+5. Evita que el alumno gane coins múltiples veces por la misma actividad ya aprobada.
+6. Guarda el historial de respuestas, puntaje, feedback y coins ganados.
+
+RAG / uso del transcript:
+Implementa una versión simple de RAG para el MVP:
+1. Divide el transcript en fragmentos o chunks.
+2. Usa esos chunks como contexto para generar resumen, retos y quizzes.
+3. No inventes temas que no aparezcan en el transcript.
+4. Si el transcript es largo, selecciona los fragmentos más relevantes o resume por partes.
+5. Mantén todo simple y funcional para MVP; no agregues una base vectorial compleja si no es necesaria todavía.
+
+Formato que debe pedir a OpenAI:
+Pide a gpt-6-luna que devuelva JSON válido y estructurado. Usa validación robusta para evitar que la app se rompa si el modelo devuelve texto imperfecto.
+
+Estructura esperada para generación:
+{
+  "resumen_corto": "",
+  "resumen_completo": "",
+  "conceptos_clave": ["", ""],
+  "retos": [
+    {
+      "id": "reto_1",
+      "titulo": "",
+      "instruccion": "",
+      "dificultad": "basico",
+      "respuesta_esperada": "",
+      "rubrica": "",
+      "coins": 10
+    }
+  ],
+  "quizzes": [
+    {
+      "id": "quiz_1",
+      "pregunta": "",
+      "opciones": ["A", "B", "C", "D"],
+      "respuesta_correcta": "",
+      "explicacion": "",
+      "coins": 5
+    }
+  ]
+}
+
+Prompt interno para generación:
+Eres un asistente educativo de DMC Institute.
+
+Usa únicamente el transcript/contexto de la clase entregado. No inventes temas que no aparezcan en la clase.
+
+Genera material de práctica para alumnos de tecnología y datos.
+Los retos deben medir comprensión real, no memoria.
+Los quizzes deben ser claros y tener una sola respuesta correcta.
+Las rúbricas deben permitir evaluar respuestas abiertas.
+Los DMC Coins deben premiar aprendizaje real.
+
+Devuelve SOLO JSON válido con resumen, conceptos clave, 3 retos y 3 quizzes.
+
+Prompt interno para evaluación:
+Eres evaluador educativo de DMC Institute.
+
+Evalúa la respuesta del alumno usando la rúbrica y la respuesta esperada.
+Devuelve SOLO JSON válido:
+
+{
+  "puntaje": 0,
+  "aprobado": true,
+  "feedback": "",
+  "coins_ganados": 0,
+  "motivo_coins": ""
+}
+
+Reglas:
+- Puntaje de 0 a 10.
+- Aprobado es true solo si puntaje >= 7.
+- Si aprobado es false, coins_ganados debe ser 0.
+- Si aprobado es true, asigna los coins definidos para esa actividad.
+- No regales coins por respuestas vacías, copiadas, demasiado genéricas o sin relación con la clase.
+- El feedback debe explicar qué hizo bien y qué debe mejorar.
+
+Requisitos técnicos:
+1. Inspecciona la estructura actual del proyecto antes de modificar.
+2. Respeta la arquitectura existente.
+3. No migres la app a Streamlit.
+4. No borres datos ni componentes existentes.
+5. Reutiliza el sistema actual de clases, alumno demo, práctica y DMC Coins si ya existe.
+6. Si no existe persistencia real, usa el mecanismo actual del proyecto y deja preparado el modelo de datos para persistencia futura.
+7. Maneja estados de carga y error:
+   - "Generando resumen y práctica..."
+   - "Contenido generado"
+   - "Publicando práctica..."
+   - "Evaluando respuesta..."
+   - "Coins asignados"
+   - "Error al generar"
+   - "Error al evaluar"
+8. Mantén segura la API key. Nunca la muestres en pantalla ni logs.
+9. Evita llamadas innecesarias a OpenAI. No regeneres contenido si ya existe salvo que el docente presione "Regenerar".
+10. Usa gpt-6-luna con razonamiento bajo o el ajuste equivalente si el SDK lo permite.
+
+Antes de terminar:
+1. Prueba generar práctica desde un transcript de ejemplo.
+2. Prueba publicar la práctica.
+3. Prueba responder un reto como alumno.
+4. Prueba que una respuesta aprobada asigne coins.
+5. Prueba que no se asignen coins dos veces por la misma actividad.
+6. Confirma que la plataforma sigue cargando.
+7. Resume qué archivos modificaste y cómo probar el flujo completo.

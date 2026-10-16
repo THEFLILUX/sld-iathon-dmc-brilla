@@ -1,0 +1,78 @@
+# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# compiled output
+dist
+tmp
+out-tsc
+*.tsbuildinfo
+.expo
+.expo-shared
+
+# dependencies
+node_modules
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+
+# System Files
+.DS_Store
+Thumbs.db
+
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
+
+# Replit
+.cache/
+.local/
+
+# Python and private local configuration
+__pycache__/
+*.py[cod]
+.pythonlibs/
+.venv/
+.env
+.env.*
+!.env.example
+# Embedded local PostgreSQL data
+/artifacts/cuadrilla/.local/
+
+# Large class sources, uploads and generated output
+/artifacts/cuadrilla/uploads/*
+!/artifacts/cuadrilla/uploads/.gitkeep
+/artifacts/cuadrilla/sample_data/*
+!/artifacts/cuadrilla/sample_data/README.md
+/generated-artifacts/
+
+# Private deployment configuration, uploaded files and database copies
+/deploy/gcp/runtime.env
+/deploy/gcp/account-passwords.json
+/deploy/gcp/data/
+/deploy/gcp/backups/
+/deploy/gcp/*.dump
+
+# Evidencias internas y grabaciones de clases
+.agents/
+attached_assets/*.mp4

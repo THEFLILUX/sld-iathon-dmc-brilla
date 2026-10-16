@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_macros.html" import estado_tema %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('teacher_home') }}">Mis cursos</a> › <a href="{{ url_for('teacher_course', curso_id=curso.id) }}">{{ curso.nombre }}</a> › <a href="{{ url_for('teacher_students', curso_id=curso.id) }}">Alumnos</a> › {{ alumno.nombre_completo }}</p>
+<h1 class="page-title">{{ alumno.nombre_completo }}</h1>
+<p class="page-sub">{{ reporte.exp|miles }} EXP en el curso · {{ reporte.coins|miles }} Coins</p>
+{% include "teacher/_course_nav.html" %}
+<div class="btn-row"><a class="btn btn-ghost" href="{{ url_for('teacher_student_profile', curso_id=curso.id, alumno_id=alumno.id) }}">Ver perfil y experiencia</a><a class="btn btn-ghost" href="{{ url_for('teacher_assistant', curso_id=curso.id) }}?alumno_id={{ alumno.id }}">Consultar a Brilla</a></div>
+<div class="kpis">
+  {% for e in ('dominado', 'en_progreso', 'debil', 'sin_datos') %}<div class="stat"><span class="stat-n">{{ reporte.conteo.get(e, 0) }}</span><span class="stat-l">{{ ESTADO_TEMA[e] }}</span></div>{% endfor %}
+</div>
+<div class="grid">
+  <section class="card" aria-labelledby="t-malla">
+    <h2 class="card-title" id="t-malla">{{ icon('list') }} Temas de la malla</h2>
+    <div class="table-wrap"><table class="table cards">
+      <thead><tr><th>Tema</th><th>Estado</th><th class="num">Dominio</th><th>Nivel</th><th>Próximo repaso</th></tr></thead>
+      <tbody>{% for f in reporte.temas %}
+        <tr><td data-label="Tema">{{ f.tema.etiqueta }}</td><td data-label="Estado">{{ estado_tema(f.estado) }}</td>
+          <td data-label="Dominio" class="num">{{ (f.dominio|round|int) ~ '%' if f.dominio is not none else '—' }}</td>
+          <td data-label="Nivel">{{ NIVEL[f.nivel] }}</td><td data-label="Repaso">{{ f.proximo_repaso|fecha if f.proximo_repaso else '—' }}</td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+  </section>
+  <aside class="stack">
+    <section class="card" aria-labelledby="t-err">
+      <h2 class="card-title" id="t-err">{{ icon('flag') }} Errores frecuentes</h2>
+      {% if reporte.errores %}<ul class="moves">{% for tag, n in reporte.errores %}<li><span>{{ tag }}</span><strong>{{ n }}</strong></li>{% endfor %}</ul>
+      {% else %}<p class="muted small">Sin errores registrados.</p>{% endif %}
+    </section>
+  </aside>
+</div>
+<section class="card mt-module" aria-labelledby="t-hist">
+  <h2 class="card-title" id="t-hist">{{ icon('clock') }} Historial de intentos</h2>
+  {% if reporte.historial %}
+  <div class="table-wrap"><table class="table cards">
+    <thead><tr><th>Fecha</th><th>Origen</th><th>Tema</th><th>Nivel</th><th>Resultado</th><th class="num">Pistas</th><th class="num">EXP</th></tr></thead>
+    <tbody>{% for i, t, v in reporte.historial %}
+      <tr><td data-label="Fecha">{{ i.creado_en|fecha_hora }}</td><td data-label="Origen">{{ {'quiz': 'Quiz', 'repaso': 'Repaso', 'semanal': 'Semanal'}[i.origen] }}</td>
+        <td data-label="Tema">{{ t.etiqueta }}</td><td data-label="Nivel">{{ NIVEL[i.nivel] }}</td>
+        <td data-label="Resultado">{% if i.resultado %}<span class="chip {{ 'chip-ok' if i.resultado == 'correcto' else 'chip-warn' if i.resultado == 'parcial' else 'chip-err' }}">{{ i.resultado|capitalize }}</span>{% else %}<span class="chip">Pendiente</span>{% endif %}</td>
+        <td data-label="Pistas" class="num">{{ i.pistas_usadas }}</td><td data-label="EXP" class="num">{{ i.exp }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="muted">Todavía no practica.</p>{% endif %}
+</section>
+{% endblock %}

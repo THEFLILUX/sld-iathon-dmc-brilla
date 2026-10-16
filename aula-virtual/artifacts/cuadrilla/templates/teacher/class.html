@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% from "_ai.html" import ai_button with context %}
+{% from "_icons.html" import icon %}
+{% from "_class_summary.html" import contenido_resumen %}
+{% from "_macros.html" import estado_clase, estado_reto, tipo_reto, version_detalle, nivel %}
+{% block scripts %}<script src="{{ url_for('static', path='js/teacher.js') }}?v=20261014-brilla" defer></script>{% endblock %}
+{% block body_attrs %}{% if generando %} data-refresh="6"{% endif %}{% endblock %}
+
+{% macro reto_card(r, titulo) %}
+{% set vs = versiones[r.id] %}
+<article class="reto-card" id="reto-{{ r.id }}">
+  <div class="reto-head">
+    <h3>{{ titulo }}</h3>
+    {% if vs %}<span class="chip">{{ tipo_reto((vs.get('intermedio') or vs.values()|first).tipo) }}</span>{% endif %}
+    {{ estado_reto(r.estado) }}
+    {% if r.origen == 'docente' %}<span class="chip chip-info">Tuyo</span>{% endif %}
+    {% if reportes.get(r.id) %}<span class="chip chip-warn">{{ reportes[r.id] }} reporte{{ 's' if reportes[r.id] > 1 }}</span>{% endif %}
+  </div>
+  {% if r.estado == 'generando' %}
+    <div class="processing"><span class="spinner" aria-hidden="true"></span><p class="muted" style="margin:0">Generando otro reto para esta posición…</p></div>
+  {% elif r.estado == 'error' %}
+    <p class="callout callout-err" style="margin:6px 0">{{ r.error_mensaje or 'No se pudo generar este reto.' }}</p>
+    <div class="btn-row">
+      <form method="post" action="{{ url_for('teacher_reto_retry', reto_id=r.id) }}" class="inline"><input type="hidden" name="_csrf" value="{{ csrf }}">{{ ai_button('Generar otro', enabled=settings.ai_enabled, cls='btn btn-sm') }}</form>
+      <a class="btn btn-sm btn-ghost" href="{{ url_for('teacher_own', clase_id=clase.id) }}?reemplaza={{ r.id }}">Escribir el mío</a>
+    </div>
+  {% else %}
+    <dl class="kv">
+      <dt>Tema</dt><dd>{{ temas[r.tema_id].etiqueta }} <span class="tiny muted">(máximo {{ NIVEL[temas[r.tema_id].nivel_maximo] }})</span></dd>
+      {% if r.error_comun %}<dt>Error común</dt><dd>{{ r.error_comun }}</dd>{% endif %}
+      <dt>Fuente</dt><dd class="small"><em>{{ r.fuente_ref or '—' }}</em></dd>
+    </dl>
+    {% for a in r.avisos or [] %}<p class="callout" style="margin:6px 0;padding:8px 12px">{{ a }}</p>{% endfor %}
+    <div class="versions">
+      {% for n in NIVELES %}{% if n in vs %}
+      <details{% if n == 'intermedio' or (n not in ('intermedio',) and loop.first and 'intermedio' not in vs) %} open{% endif %}>
+        <summary>{{ VERSION[n] }} · {{ NIVEL[n] }}</summary>
+        {{ version_detalle(vs[n]) }}
+        <a class="btn btn-sm btn-ghost" href="{{ url_for('teacher_edit', reto_id=r.id) }}?nivel={{ n }}">Editar esta versión</a>
+      </details>
+      {% endif %}{% endfor %}
+    </div>
+    <div class="btn-row">
+      {% if r.estado == 'propuesto' %}
+      <form method="post" action="{{ url_for('teacher_approve', reto_id=r.id) }}" class="inline"><input type="hidden" name="_csrf" value="{{ csrf }}"><button class="btn btn-sm btn-ok" type="submit">{{ icon('check') }} Aprobar</button></form>
+      {% endif %}
+      <a class="btn btn-sm btn-ghost" href="{{ url_for('teacher_edit', reto_id=r.id) }}">Editar</a>
+      {% if r.uso == 'clase' and r.posicion %}
+      <a class="btn btn-sm btn-ghost" href="{{ url_for('teacher_own', clase_id=clase.id) }}?reemplaza={{ r.id }}">Reemplazar</a>
+      {% endif %}
+      <form method="post" action="{{ url_for('teacher_reject', reto_id=r.id) }}" class="inline" data-confirm="¿Rechazar este reto? {{ 'Se generará otro en su lugar.' if r.posicion else '' }}"><input type="hidden" name="_csrf" value="{{ csrf }}">{{ ai_button('Rechazar', enabled=settings.ai_enabled and r.uso == 'clase' and r.posicion is not none, cls='btn btn-sm btn-danger') }}</form>
+    </div>
+  {% endif %}
+  {% if auditoria[r.id] %}
+  <details class="small" style="margin-top:8px"><summary class="muted">Historial</summary>
+    <ul class="audit">{% for a in auditoria[r.id] %}<li>{{ a.fecha|fecha_hora }} · {{ a.accion|replace('_', ' ') }}{% if a.detalle %} · {{ a.detalle }}{% endif %}</li>{% endfor %}</ul>
+  </details>
+  {% endif %}
+</article>
+{% endmacro %}
+
+{% block notifications %}
+{{ super() }}
+{% if clase.estado == 'error' %}{% call notification('error', title='No se pudo procesar la clase') %}{{ clase.error_mensaje or 'No se pudo procesar la clase.' }}{% endcall %}
+{% elif clase.estado == 'publicada' and not aviso %}{% call notification('success', title='Clase publicada') %}Publicada el {{ clase.publicada_en|fecha_hora }}. Puedes seguir editando: cada edición crea una nueva versión y los intentos anteriores conservan la original. <a href="{{ url_for('teacher_class_report', clase_id=clase.id) }}">Ver reporte de la clase</a>{% endcall %}{% endif %}
+{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('teacher_home') }}">Mis cursos</a> › <a href="{{ url_for('teacher_course', curso_id=curso.id) }}">{{ curso.nombre }}</a> › {{ clase.nombre }}</p>
+<h1 class="page-title">{{ clase.nombre }}</h1>
+<p class="page-sub">{{ clase.fecha|fecha }} · {{ estado_clase(clase.estado) }}{% if clase.fuente_nombre %} · {{ clase.fuente_nombre }}{% endif %}</p>
+{% include "teacher/_course_nav.html" %}
+<div class="class-tools"><a class="btn btn-sm btn-danger" href="{{ url_for('teacher_class_delete', clase_id=clase.id) }}">Eliminar clase</a></div>
+
+{% if clase.estado == 'procesando' %}
+<section class="card">
+  <div class="processing"><span class="spinner" aria-hidden="true"></span><div><strong>Procesando la clase…</strong><p class="small muted" style="margin:0">Esta página se actualiza sola. Puedes salir y volver.</p></div></div>
+  {% set pasos = [('transcribiendo', 'Transcribir'), ('anonimizando', 'Anonimizar'), ('mapeando', 'Mapear a la malla'), ('generando', 'Pregenerar 4 retos')] %}
+  {% set ns = namespace(hecho=True) %}
+  <div class="steps">{% for clave, texto in pasos %}{% if clave == clase.paso %}{% set ns.hecho = False %}<span class="on">{{ texto }}</span>{% else %}<span class="{{ 'done' if ns.hecho and clase.paso }}">{{ texto }}</span>{% endif %}{% endfor %}</div>
+</section>
+{% elif clase.estado == 'error' %}
+<section class="card">
+  
+  <form method="post" action="{{ url_for('teacher_class_retry', clase_id=clase.id) }}"><input type="hidden" name="_csrf" value="{{ csrf }}">{{ ai_button('Reintentar', enabled=settings.ai_enabled) }}</form>
+  <p class="small muted">Si la IA no encontró los temas, elígelos abajo y reintenta.</p>
+</section>
+{% elif clase.estado == 'por_validar' %}
+<section class="card" style="border-color:var(--cyan)">
+  <h2 class="card-title">{{ icon('clock') }} Valida el quiz · Tiempo restante <span class="countdown" data-deadline="{{ clase.vence_validacion_en.isoformat() }}">—</span>
+    <form method="post" action="{{ url_for('teacher_class_publish', clase_id=clase.id) }}" class="inline push"><input type="hidden" name="_csrf" value="{{ csrf }}"><button class="btn btn-cyan btn-sm" type="submit">Publicar ahora</button></form>
+  </h2>
+  <p class="small" style="margin:0">Aprueba, edita, reemplaza o rechaza cada reto. Siempre quedan 4. Si no haces nada, al terminar la hora se publican los retos propuestos.</p>
+</section>
+{% endif %}
+
+<div class="grid mt-module">
+  <div class="stack">
+    {% if base or previo or reserva %}
+    <section aria-labelledby="t-retos">
+      <h2 class="card-title" id="t-retos">Retos base</h2>
+      {% for r in base %}{{ reto_card(r, 'RETO ' ~ r.posicion) }}{% endfor %}
+    </section>
+    {% if previo %}<section aria-labelledby="t-previo"><h2 class="card-title" id="t-previo">Conocimiento previo (repaso de la clase 1)</h2>
+      <p class="small muted">Se usa como reto de REPASO de la clase 1. No entra al dominio ni a la agenda.</p>
+      {% for r in previo %}{{ reto_card(r, 'PREVIO') }}{% endfor %}</section>{% endif %}
+    {% if reserva %}<section aria-labelledby="t-reserva"><h2 class="card-title" id="t-reserva">De reserva</h2>
+      <p class="small muted">Se usan cuando un reto se retira o falta el repaso.</p>
+      {% for r in reserva %}{{ reto_card(r, 'RESERVA') }}{% endfor %}</section>{% endif %}
+    {% if clase.estado in ('por_validar', 'publicada') %}
+    <a class="btn btn-ghost" href="{{ url_for('teacher_own', clase_id=clase.id) }}">+ Agregar mi propio reto</a>
+    {% endif %}
+    {% elif clase.estado != 'procesando' %}
+    <div class="empty"><h3>Sin retos todavía</h3></div>
+    {% endif %}
+  </div>
+
+  <aside class="stack">
+    <section class="card" id="temas" aria-labelledby="t-temas">
+      <h2 class="card-title" id="t-temas">{{ icon('list') }} Temas de la clase</h2>
+      {% if temas_clase %}
+      <ul class="list small">
+        {% for t, ct in temas_clase %}
+        <li><div class="grow"><strong>{{ t.etiqueta }}</strong>{% if ct.evidencia %}<div class="tiny muted"><em>«{{ ct.evidencia[:220] }}»</em></div>{% endif %}</div>
+          {% if ct.origen == 'ia' %}<span class="chip" title="Confianza de la IA">{{ (ct.confianza * 100)|round|int }}%</span>{% else %}<span class="chip chip-info">Docente</span>{% endif %}</li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="muted small">Aún no hay temas asignados.</p>{% endif %}
+      <details style="margin-top:8px"><summary class="small" style="cursor:pointer;color:var(--primary)">Ajustar temas</summary>
+        <form method="post" action="{{ url_for('teacher_class_topics', clase_id=clase.id) }}" class="form" style="margin-top:8px">
+          <input type="hidden" name="_csrf" value="{{ csrf }}">
+          {% set marcados = temas_clase|map(attribute=0)|map(attribute='id')|list %}
+          <div class="topic-grid">{% for t in temas_curso %}<label class="check small"><input type="checkbox" name="tema_id" value="{{ t.id }}" {% if t.id in marcados %}checked{% endif %}> {{ t.etiqueta }}</label>{% endfor %}</div>
+          <button class="btn btn-sm" type="submit">Guardar temas</button>
+          <p class="tiny muted">Solo temas de la malla. Cambiarlos no altera el historial; los retos nuevos usarán estos temas.</p>
+        </form>
+      </details>
+    </section>
+    {% if clase.tarea or clase.recursos %}
+    <section class="card"><h2 class="card-title">Material</h2>
+      {% if clase.recursos %}<p class="small"><strong>Recursos:</strong> {{ clase.recursos|map(attribute='nombre')|join(', ') }}</p>{% endif %}
+      {% if clase.tarea %}<p class="small"><strong>Tarea (LISTO):</strong> {{ clase.tarea }}</p>{% endif %}
+    </section>
+    {% endif %}
+    {% if clase.transcript %}
+    <section class="card" id="resumen-clase" aria-labelledby="t-resumen-clase">
+      <h2 class="card-title" id="t-resumen-clase"><img class="summary-mascot" src="{{ url_for('static', path='img/brilla-ai.png') }}" alt="" width="28" height="28"> Resumen de la clase <span class="chip chip-info">IA</span></h2>
+      {% if resumen_clase and resumen_clase.estado == 'listo' and resumen_clase.contenido %}
+        <p class="tiny muted">Los alumnos lo ven al publicarse la clase.</p>
+        <details class="class-summary"><summary>Leer resumen</summary>{{ contenido_resumen(resumen_clase.contenido) }}</details>
+      {% elif resumen_clase and resumen_clase.estado == 'error' %}
+        <p class="small muted">No se pudo preparar el resumen. El quiz puede continuar con normalidad.</p>
+        <p class="small">{{ resumen_clase.error_mensaje }}</p>
+        <form method="post" action="{{ url_for('teacher_summary_retry', clase_id=clase.id) }}"><input type="hidden" name="_csrf" value="{{ csrf }}">{{ ai_button('Reintentar resumen', enabled=settings.ai_enabled, cls='btn btn-sm') }}</form>
+      {% elif resumen_clase %}
+        <p class="small muted" role="status">Brilla está preparando el resumen. Puedes continuar validando el quiz y volver en unos minutos.</p>
+      {% else %}
+        <p class="small muted">El resumen se preparará automáticamente cuando la IA esté disponible.</p>
+      {% endif %}
+    </section>
+    <section class="card"><h2 class="card-title">Transcript</h2>
+      <details><summary class="small" style="cursor:pointer;color:var(--primary)">Ver el transcript ({{ clase.transcript|length|miles }} caracteres)</summary>
+        <p class="small prewrap" style="max-height:420px;overflow:auto">{{ clase.transcript }}</p></details>
+      <p class="tiny muted">A la IA solo llega la versión anonimizada.</p>
+    </section>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

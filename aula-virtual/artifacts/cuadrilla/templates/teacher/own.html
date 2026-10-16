@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "_ai.html" import ai_button with context %}
+{% block scripts %}<script src="{{ url_for('static', path='js/teacher.js') }}?v=20261014-brilla" defer></script>{% endblock %}
+{% block content_class %} narrow{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('teacher_home') }}">Mis cursos</a> › <a href="{{ url_for('teacher_course', curso_id=curso.id) }}">{{ curso.nombre }}</a> › <a href="{{ url_for('teacher_class', clase_id=clase.id) }}">{{ clase.nombre }}</a> › {{ 'Reemplazar reto' if reemplaza else 'Mi propio reto' }}</p>
+<h1 class="page-title">{{ 'Reemplazar el reto ' ~ reemplaza.posicion if reemplaza else 'Agregar mi propio reto' }}</h1>
+<p class="page-sub">{% if reemplaza %}Tu reto ocupará la posición {{ reemplaza.posicion }}. {% else %}Quedará de reserva para repasos o si un reto se retira. {% endif %}Escribe una versión; la IA propondrá las de los otros niveles para que las revises.</p>
+{% include "teacher/_course_nav.html" %}
+<form method="post" action="{{ url_for('teacher_own_post', clase_id=clase.id) }}" class="card form"{% if settings.ai_enabled %} data-ai-topic-form{% endif %}>
+  <input type="hidden" name="_csrf" value="{{ csrf }}">
+  {% if reemplaza %}<input type="hidden" name="reemplaza" value="{{ reemplaza.id }}">{% endif %}
+  <div class="row-2">
+    <label>Tema<select name="tema_id" required>{% for t in temas %}<option value="{{ t.id }}" data-ai-completes="{{ 'si' if t.nivel_maximo != 'basico' else 'no' }}" {% if (enviado and enviado.tema_id == t.id|string) or (not enviado and reemplaza and reemplaza.tema_id == t.id) %}selected{% endif %}>{{ t.etiqueta }} (máx. {{ NIVEL[t.nivel_maximo] }})</option>{% endfor %}</select></label>
+    <label>Nivel de esta versión<select name="nivel">{% for n in NIVELES %}<option value="{{ n }}" {% if (enviado.nivel if enviado else 'intermedio') == n %}selected{% endif %}>{{ VERSION[n] }} · {{ NIVEL[n] }}</option>{% endfor %}</select></label>
+  </div>
+  {% include "teacher/_version_form.html" %}
+  <label>Error común que detecta el reto <span class="hint">(opcional)</span><input name="error_comun" maxlength="600" value="{{ enviado.error_comun if enviado else '' }}"></label>
+  {% set seleccion = namespace(tema=temas|first) %}{% for t in temas %}{% if (enviado and enviado.tema_id == t.id|string) or (not enviado and reemplaza and reemplaza.tema_id == t.id) %}{% set seleccion.tema = t %}{% endif %}{% endfor %}
+  <div class="btn-row">{{ ai_button('Guardar reto', enabled=settings.ai_enabled, active=seleccion.tema and seleccion.tema.nivel_maximo != 'basico') }}<a class="btn btn-ghost" href="{{ url_for('teacher_class', clase_id=clase.id) }}">Cancelar</a></div>
+</form>
+{% endblock %}

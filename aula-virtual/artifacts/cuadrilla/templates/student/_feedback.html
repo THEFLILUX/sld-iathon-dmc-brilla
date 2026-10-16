@@ -1,0 +1,35 @@
+{# A3: verdict, what went well, what was missing, hint if it failed — fixed order. Expects intento, version. #}
+{% from "_icons.html" import icon %}
+<section id="feedback" data-after-celebration aria-live="polite">
+{% if intento.estado == 'pendiente' or intento.estado == 'evaluando' %}
+  <div class="callout callout-info" role="status">
+    <div class="waiting"><span class="spinner" aria-hidden="true"></span>
+    <p style="margin:0">{% if intento.estado == 'evaluando' %}Estamos revisando tu respuesta…{% else %}No pudimos calificar tu respuesta ahora. Quedó pendiente, sin penalidad: la revisaremos en unos minutos y verás el resultado en tu resumen. Puedes seguir.{% endif %}</p></div>
+  </div>
+{% else %}
+  {% set fb = intento.feedback or {} %}
+  <div class="feedback">
+    <div class="verdict {{ intento.resultado }}">
+      <span>{{ {'correcto': '¡Correcto!', 'parcial': 'Parcial', 'incorrecto': 'Incorrecto'}[intento.resultado] }}</span>
+      <span class="exp">+{{ intento.exp }} EXP</span>
+    </div>
+    <div class="fb-body">
+      {% if fb.bien %}<h3>Lo que hiciste bien</h3><p>{{ fb.bien }}</p>{% endif %}
+      {% if fb.falto %}<h3>{{ 'Para reforzar' if intento.resultado == 'correcto' else 'Lo que faltó' }}</h3><p class="prewrap">{{ fb.falto }}</p>{% endif %}
+      {% if fb.ejemplo_o_pista and intento.resultado != 'correcto' %}<h3>{{ icon('bulb') }} Pista o ejemplo</h3><p>{{ fb.ejemplo_o_pista }}</p>{% endif %}
+      {% if intento.pistas_usadas %}<p class="tiny muted" style="margin-top:8px">Usaste {{ intento.pistas_usadas }} pista{{ 's' if intento.pistas_usadas > 1 }}: el EXP de este reto es la mitad y no cuenta para Coins.</p>{% endif %}
+    </div>
+  </div>
+{% endif %}
+  <details class="solution" id="solucion"{% if intento.resultado == 'correcto' %} hidden{% endif %}>
+    <summary>Ver la solución</summary>
+    {% if version.tipo == 'alternativas' or version.tipo == 'completar' %}
+      <p><strong>Respuesta correcta:</strong> {{ version.respuesta_correcta }}</p>
+    {% else %}
+      <p><strong>Ideas que debía cubrir:</strong></p><ul>{% for p in version.puntos_clave %}<li>{{ p }}</li>{% endfor %}</ul>
+      {% if version.respuesta_correcta %}<p class="prewrap"><strong>Respuesta modelo:</strong> {{ version.respuesta_correcta }}</p>{% endif %}
+    {% endif %}
+    <p class="prewrap small">{{ version.explicacion }}</p>
+  </details>
+  <p class="small muted" style="margin-top:12px"><strong>Tu respuesta:</strong> <span class="prewrap">{{ intento.respuesta }}</span></p>
+</section>

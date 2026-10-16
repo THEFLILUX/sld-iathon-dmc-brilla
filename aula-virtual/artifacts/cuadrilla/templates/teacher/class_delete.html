@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content_class %} narrow{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('teacher_home') }}">Mis cursos</a> › <a href="{{ url_for('teacher_course', curso_id=curso.id) }}">{{ curso.nombre }}</a> › <a href="{{ url_for('teacher_class', clase_id=clase.id) }}">{{ clase.nombre }}</a> › Eliminar</p>
+<h1 class="page-title">Eliminar clase definitivamente</h1>
+<p class="page-sub">{{ clase.nombre }} · {{ curso.nombre }}</p>
+{% include "teacher/_course_nav.html" %}
+<section class="card">
+  <h2 class="card-title">Información que se eliminará</h2>
+  <p>Se borrarán la grabación o archivo fuente, el transcript, el resumen de IA, los recursos, la tarea, los retos y sus versiones, los quizzes de esta clase, las respuestas, las revisiones y los registros de IA asociados.</p>
+  {% if resumen %}
+  <dl class="kv">
+    <dt>Archivos</dt><dd>{{ resumen.archivos|miles }}</dd>
+    <dt>Retos y versiones</dt><dd>{{ resumen.retos|miles }} retos · {{ resumen.versiones|miles }} versiones</dd>
+    <dt>Quizzes de la clase</dt><dd>{{ resumen.quizzes|miles }}</dd>
+    <dt>Respuestas</dt><dd>{{ resumen.intentos|miles }}</dd>
+    <dt>Quizzes con repasos relacionados</dt><dd>{{ resumen.afectados|miles }}</dd>
+    <dt>Retos semanales relacionados</dt><dd>{{ resumen.semanales|miles }}</dd>
+    <dt>Recompensas asociadas</dt><dd>{{ resumen.exp|miles }} EXP · {{ resumen.coins|miles }} Coins</dd>
+  </dl>
+  <p class="small">Los repasos que usen contenido de esta clase también se eliminarán. El progreso, las recompensas y el podio se actualizarán con la actividad restante. Si hay Coins ya canjeadas y el saldo quedaría negativo, el administrador deberá corregir primero esos canjes.</p>
+  <p class="small">El borrado es definitivo en la base y los archivos activos. Las copias de seguridad históricas mantienen su retención de 14 días.</p>
+  <form method="post" action="{{ url_for('teacher_class_delete_post', clase_id=clase.id) }}" class="form" data-delete data-confirm="¿Eliminar definitivamente «{{ clase.nombre }}» y todos sus datos asociados de {{ curso.nombre }}? Esta acción no se puede deshacer." data-confirm-title="Eliminar clase" data-confirm-label="Eliminar definitivamente">
+    <input type="hidden" name="_csrf" value="{{ csrf }}">
+    <label class="check"><input type="checkbox" name="confirmo" value="si" required> Entiendo que se eliminarán definitivamente esta clase y sus datos asociados.</label>
+    <div class="btn-row"><button class="btn btn-danger" type="submit">Eliminar clase definitivamente</button><a class="btn btn-ghost" href="{{ url_for('teacher_course', curso_id=curso.id) }}">Cancelar</a></div>
+  </form>
+  {% else %}<a class="btn btn-ghost" href="{{ url_for('teacher_course', curso_id=curso.id) }}">Volver al curso</a>{% endif %}
+</section>
+{% endblock %}

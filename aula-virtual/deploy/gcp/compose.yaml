@@ -1,0 +1,66 @@
+name: cuadrilla
+services:
+  database:
+    image: postgres:16-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cuadrilla
+      POSTGRES_USER: cuadrilla
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cuadrilla -d cuadrilla"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    mem_limit: 768m
+
+  app:
+    build:
+      context: ../..
+    restart: unless-stopped
+    env_file:
+      - path: ./runtime.env
+        format: raw
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8000
+      BASE_PATH: /
+      FORWARDED_ALLOW_IPS: "*"
+      DB_AUTO_CREATE: "true"
+      DEMO_MODE: "false"
+    volumes:
+      - ./data/uploads:/app/artifacts/cuadrilla/uploads
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5).read()"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    mem_limit: 2304m
+
+  proxy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      SITE_HOST: ${SITE_HOST:?Define SITE_HOST}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+    mem_limit: 256m
+
+volumes:
+  postgres:
+  caddy_data:
+  caddy_config:

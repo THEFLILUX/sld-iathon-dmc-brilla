@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+
+{% macro tarjeta(t) %}
+{% set c = t.curso %}
+{% set url_curso = url_for('student_course', curso_id=c.id) %}
+<article class="course-card" aria-labelledby="curso-{{ c.id }}">
+  <a class="course-cover cover-{{ t.color }}" href="{{ url_curso }}">
+    <span class="course-badge" aria-hidden="true">{{ t.sigla }}</span>
+    <span>
+      <span class="course-name" id="curso-{{ c.id }}">{{ c.nombre }}</span>
+      <span class="course-meta">{{ t.docentes|join(', ') if t.docentes else 'DMC Institute' }}</span>
+    </span>
+    <span class="course-state">{{ 'En curso' if c.estado == 'activo' else 'Finalizado' }}</span>
+  </a>
+  <div class="course-body">
+    <dl class="course-stats">
+      <div><dt>EXP del curso</dt><dd>{{ t.exp|miles }}</dd></div>
+      <div><dt>Podio</dt><dd>{% if t.puesto %}#{{ t.puesto }}<small> de {{ t.inscritos }}</small>{% else %}—{% endif %}</dd></div>
+      <div><dt>Temas dominados</dt><dd>{{ t.dominados }}<small> de {{ t.temas }}</small></dd></div>
+    </dl>
+    <div>
+      <div class="course-progress-label"><span>Quizzes completados</span><strong>{{ t.completados }} de {{ t.quizzes }}</strong></div>
+      <progress class="bar" aria-label="Quizzes completados" value="{{ t.completados }}" max="{{ t.quizzes or 1 }}" aria-valuetext="{{ t.completados }} de {{ t.quizzes }} quizzes completados">{{ t.completados }} de {{ t.quizzes }}</progress>
+    </div>
+    <ul class="todo" aria-label="Pendientes">
+      {% if t.en_curso %}<li class="todo-item urgente">{{ icon('clock') }} Quiz en curso</li>{% endif %}
+      {% if t.nuevos %}<li class="todo-item">{{ icon('book') }} {{ t.nuevos }} quiz{{ 'zes' if t.nuevos > 1 }} nuevo{{ 's' if t.nuevos > 1 }}</li>{% endif %}
+      {% if t.repasos %}<li class="todo-item">{{ icon('refresh') }} {{ t.repasos }} tema{{ 's' if t.repasos > 1 }} por repasar</li>{% endif %}
+      {% if t.semanal == 'disponible' and c.estado == 'activo' %}<li class="todo-item">{{ icon('star') }} Reto semanal disponible</li>{% endif %}
+      {% if not (t.en_curso or t.nuevos or t.repasos or (t.semanal == 'disponible' and c.estado == 'activo')) %}
+        <li class="todo-item al-dia">{{ icon('check') }} {{ 'Al día' if c.estado == 'activo' else 'Curso cerrado' }}</li>{% endif %}
+    </ul>
+    <div class="course-actions">
+      {% if t.siguiente.destino == 'quiz' %}<a class="btn btn-sm" href="{{ url_for('student_quiz', curso_id=c.id, clase_id=t.siguiente.clase_id) }}">{{ t.siguiente.texto }}</a>
+      {% elif t.siguiente.destino == 'semanal' %}<a class="btn btn-sm" href="{{ url_for('student_weekly', curso_id=c.id) }}">{{ t.siguiente.texto }}</a>
+      {% else %}<a class="btn btn-sm" href="{{ url_curso }}">{{ t.siguiente.texto }}</a>{% endif %}
+      <a class="btn btn-sm btn-ghost" href="{{ url_for('student_progress', curso_id=c.id) }}">Mi progreso</a>
+    </div>
+    <p class="tiny muted course-foot">{% if t.ultima %}Última actividad: {{ t.ultima|fecha_hora }}{% else %}Aún no practicas en este curso{% endif %}</p>
+  </div>
+</article>
+{% endmacro %}
+
+{% block content %}
+<p class="crumbs">Aula virtual</p>
+<h1 class="page-title">Mis cursos</h1>
+<p class="page-sub">Hola, {{ usuario.nombre }}. Esto es lo que tienes pendiente en cada uno de tus cursos.</p>
+
+{% if activos or finalizados %}
+<div class="kpis kpis-3">
+  <div class="stat"><span class="stat-n">{{ activos|length }}</span><span class="stat-l">Curso{{ 's' if activos|length != 1 }} en curso</span></div>
+  <div class="stat"><span class="stat-n">{{ pendientes }}</span><span class="stat-l">Pendiente{{ 's' if pendientes != 1 }}</span></div>
+  <a class="stat stat-link" href="{{ url_for('student_coins') }}"><span class="stat-n">{{ coins|miles }}</span><span class="stat-l">DMC Coins · todos tus cursos</span></a>
+</div>
+{% endif %}
+
+{% if activos %}
+<h2 class="section-title">En curso</h2>
+<div class="course-grid">{% for t in activos %}{{ tarjeta(t) }}{% endfor %}</div>
+{% endif %}
+{% if finalizados %}
+<h2 class="section-title">Finalizados</h2>
+<div class="course-grid">{% for t in finalizados %}{{ tarjeta(t) }}{% endfor %}</div>
+{% endif %}
+{% if not activos and not finalizados %}
+<div class="empty"><h3>Aún no estás inscrito en un curso</h3><p>Cuando DMC te inscriba, tus cursos aparecerán aquí.</p></div>
+{% endif %}
+<p class="tiny muted" style="margin-top:18px">El EXP y el podio son de cada curso y empiezan en cero en cada uno. Tus DMC Coins se acumulan entre todos tus cursos y no vencen.</p>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-title">Canjes</h1>
+<p class="page-sub">Un canje confirmado solo se corrige devolviendo las Coins con un motivo.</p>
+<section class="card">
+  {% if filas %}
+  <div class="table-wrap"><table class="table cards">
+    <thead><tr><th>Fecha</th><th>Alumno</th><th class="num">Descuento</th><th class="num">Coins</th><th class="num">Saldo posterior</th><th>Corrección</th></tr></thead>
+    <tbody>{% for c, u in filas %}
+      <tr><td data-label="Fecha">{{ c.creado_en|fecha_hora }}</td><td data-label="Alumno">{{ u.nombre_completo }}<div class="tiny muted">{{ u.dni }}</div></td>
+        <td data-label="Descuento" class="num">{{ c.porcentaje }} %</td><td data-label="Coins" class="num">{{ c.coins_usadas|miles }}</td><td data-label="Saldo" class="num">{{ c.saldo_posterior|miles }}</td>
+        <td data-label="Corrección">{% if c.corregido_en %}<span class="chip chip-ok">Devuelto {{ c.corregido_en|fecha }}</span><div class="tiny muted">{{ c.correccion_motivo }}</div>
+          {% else %}<form method="post" action="{{ url_for('admin_redemption_fix', canje_id=c.id) }}" class="btn-row" style="margin:0" data-confirm="¿Devolver {{ c.coins_usadas }} Coins a {{ u.nombre_completo }}?"><input type="hidden" name="_csrf" value="{{ csrf }}"><input name="motivo" required maxlength="500" placeholder="Motivo"><button class="btn btn-sm btn-ghost" type="submit">Devolver Coins</button></form>{% endif %}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}<div class="empty"><h3>Sin canjes todavía</h3></div>{% endif %}
+</section>
+{% endblock %}

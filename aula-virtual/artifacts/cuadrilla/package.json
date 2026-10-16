@@ -1,0 +1,11 @@
+{
+  "name": "@workspace/cuadrilla",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cuadrilla: refuerzo post-clase con IA (FastAPI, Jinja2, PostgreSQL). pnpm solo ejecuta Python.",
+  "scripts": {
+    "dev": "python run.py",
+    "build": "python -m compileall -q config.py main.py run.py ai auth db rules services web",
+    "serve": "python run.py"
+  }
+}

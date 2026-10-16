@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block scripts %}<script src="{{ url_for('static', path='js/teacher.js') }}?v=20261014-brilla" defer></script>{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('teacher_home') }}">Mis cursos</a> › <a href="{{ url_for('teacher_course', curso_id=curso.id) }}">{{ curso.nombre }}</a> › Malla y rúbricas</p>
+<h1 class="page-title">Malla y rúbricas</h1>
+<p class="page-sub">La IA propone el nivel máximo, si el tema es fundamental y la rúbrica de Maestría. Si no cambias nada, la propuesta queda vigente.
+  {% if curso.propuesta_estado == 'generando' %}<span class="chip chip-warn">Propuesta en curso…</span>{% elif curso.propuesta_estado == 'error' %}<span class="chip chip-err">La propuesta falló: {{ curso.propuesta_error }}</span>{% endif %}</p>
+{% include "teacher/_course_nav.html" %}
+{% if not temas %}<div class="empty"><h3>El curso aún no tiene malla</h3><p>El administrador la carga en CSV o JSON.</p></div>{% endif %}
+{% set ns = namespace(modulo='~') %}
+{% for t in temas %}
+{% if t.modulo != ns.modulo %}{% set ns.modulo = t.modulo %}<h2 class="sub-title" style="margin-top:20px">{{ t.modulo or 'Sin módulo' }}</h2>{% endif %}
+<details class="card" id="tema-{{ t.id }}" style="margin-bottom:8px">
+  <summary style="cursor:pointer;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+    <strong>{{ t.etiqueta }}</strong>
+    <span class="chip chip-info">Máx. {{ NIVEL[t.nivel_maximo] }}</span>
+    {% if t.es_fundamental %}<span class="chip chip-cyan">Fundamental</span>{% endif %}
+    {% if t.id in no_cubiertos %}<span class="chip chip-no_visto">Sin clase</span>{% endif %}
+    <span class="tiny muted">{{ 'Ajustado por el docente' if t.ajustado_por_docente else ('Propuesto por la IA' if t.propuesto_por_ia else 'Valores iniciales') }}</span>
+  </summary>
+  <form method="post" action="{{ url_for('teacher_topic', tema_id=t.id) }}" class="form" style="margin-top:12px">
+    <input type="hidden" name="_csrf" value="{{ csrf }}">
+    <label>Objetivo de aprendizaje<textarea name="objetivo" rows="2" required maxlength="1000">{{ t.objetivo }}</textarea></label>
+    <div class="row-2">
+      <label>Nivel máximo<select name="nivel_maximo" data-nivel-maximo aria-controls="rubrica-{{ t.id }}">{% for n in NIVELES %}<option value="{{ n }}" {% if n == t.nivel_maximo %}selected{% endif %}>{{ NIVEL[n] }} · {{ BLOOM[n] }}</option>{% endfor %}</select></label>
+      <label class="check" style="align-self:end"><input type="checkbox" name="es_fundamental" value="si" {% if t.es_fundamental %}checked{% endif %}> Tema fundamental</label>
+    </div>
+    <fieldset id="rubrica-{{ t.id }}" data-rubrica-maestria{% if t.nivel_maximo != 'maestria' %} hidden disabled{% endif %}><legend>Rúbrica de Maestría (3 o 4 criterios)</legend>
+      {% for i in range(4) %}{% set c = t.rubrica[i] if t.rubrica|length > i else {} %}
+      <div class="row-2" style="margin-bottom:6px"><input name="criterio_{{ i + 1 }}" maxlength="200" placeholder="Criterio {{ i + 1 }}" value="{{ c.criterio or '' }}"><input name="descripcion_{{ i + 1 }}" maxlength="500" placeholder="Descripción" value="{{ c.descripcion or '' }}"></div>
+      {% endfor %}
+    </fieldset>
+    <div class="btn-row"><button class="btn btn-sm" type="submit">Guardar tema</button></div>
+    <p class="tiny muted">Al bajar el nivel máximo, ningún alumno recibe retos de un nivel superior.</p>
+  </form>
+</details>
+{% endfor %}
+{% endblock %}

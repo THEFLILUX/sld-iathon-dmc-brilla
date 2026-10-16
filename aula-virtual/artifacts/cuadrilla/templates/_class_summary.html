@@ -1,0 +1,11 @@
+{% macro contenido_resumen(contenido) -%}
+<div class="class-summary-content">
+  <p>{{ contenido.introduccion }}</p>
+  {% for seccion in contenido.secciones %}
+  <div class="class-summary-section"><h3>{{ seccion.titulo }}</h3><p class="prewrap">{{ seccion.contenido }}</p></div>
+  {% endfor %}
+  <div class="class-summary-section"><h3>Para recordar</h3>
+    <ul class="class-summary-takeaways">{% for punto in contenido.puntos_clave %}<li>{{ punto }}</li>{% endfor %}</ul>
+  </div>
+</div>
+{%- endmacro %}

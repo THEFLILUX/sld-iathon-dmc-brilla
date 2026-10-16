@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-title">Parámetros</h1>
+<p class="page-sub">Los cambios aplican hacia adelante y no reescriben el historial de EXP ni de Coins. Las reglas fijas (4 retos por quiz, 1 hora de validación, 3 pistas, intervalos 1/3/7/14/30) no se editan.</p>
+<form method="post" action="{{ url_for('admin_params_save') }}" class="stack">
+  <input type="hidden" name="_csrf" value="{{ csrf }}">
+  <div class="grid-2">
+  {% for grupo, defs in grupos.items() %}
+    <fieldset class="card"><legend>{{ grupo }}</legend>
+      <div class="form">{% for d in defs %}
+        <label>{{ d.etiqueta }}<input name="{{ d.clave }}" inputmode="decimal" value="{{ valores[d.clave]|string if not d.entero else valores[d.clave]|int }}" aria-describedby="h-{{ d.clave }}">
+          <span class="hint" id="h-{{ d.clave }}">Por defecto {{ d.defecto|string if not d.entero else d.defecto|int }} · entre {{ d.minimo|string }} y {{ d.maximo|int }}</span></label>
+      {% endfor %}</div>
+    </fieldset>
+  {% endfor %}
+  </div>
+  <div><button class="btn" type="submit">Guardar parámetros</button></div>
+</form>
+<section class="card mt-module">
+  <h2 class="card-title">Historial de cambios</h2>
+  {% if historial %}
+  <ul class="moves">{% for h in historial %}<li><span>{{ etiquetas.get(h.clave, h.clave) }}<small>{{ h.vigente_desde|fecha_hora }} · {{ autores[h.cambiado_por].nombre_completo if h.cambiado_por in autores else 'Sistema' }}</small></span><span>{{ h.valor_anterior|string }} → <strong>{{ h.valor|string }}</strong></span></li>{% endfor %}</ul>
+  {% else %}<p class="muted">Todos los parámetros tienen los valores documentados.</p>{% endif %}
+</section>
+{% endblock %}

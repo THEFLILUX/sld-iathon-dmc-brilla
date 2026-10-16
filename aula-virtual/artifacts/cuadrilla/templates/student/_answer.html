@@ -1,0 +1,23 @@
+{% from "_ai.html" import ai_button with context %}
+{# Answer field adapted to the challenge type (A2). Expects: version, respuesta, accion_responder, extra_fields #}
+<form method="post" action="{{ accion_responder }}" class="form" data-answer-form data-min="{{ minimo or 0 }}" data-open="{{ 'si' if version.tipo in ('definir', 'caso') else 'no' }}">
+  <input type="hidden" name="_csrf" value="{{ csrf }}">
+  {% for k, v in extra_fields.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+  {% if version.tipo == 'alternativas' %}
+    <fieldset class="options" style="border:0;padding:0">
+      <legend class="sr-only">Elige una alternativa</legend>
+      {% for o in version.opciones %}
+      <label class="option"><input type="radio" name="respuesta" value="{{ o }}" required {% if respuesta == o %}checked{% endif %}><span>{{ o }}</span></label>
+      {% endfor %}
+    </fieldset>
+  {% elif version.tipo == 'completar' %}
+    <label>Tu respuesta<input name="respuesta" required maxlength="300" autocomplete="off" spellcheck="false" value="{{ respuesta }}"></label>
+  {% else %}
+    <label>Tu respuesta <span class="hint">Explícalo con tus palabras{% if minimo %} (mínimo {{ minimo }} caracteres){% endif %}.</span>
+      <textarea name="respuesta" rows="6" required maxlength="8000">{{ respuesta }}</textarea></label>
+  {% endif %}
+  <div class="btn-row">
+    {{ ai_button('Enviar', enabled=version.tipo in ('definir', 'caso'), submit_hook=true) }}
+    <span class="small muted" data-status aria-live="polite"></span>
+  </div>
+</form>

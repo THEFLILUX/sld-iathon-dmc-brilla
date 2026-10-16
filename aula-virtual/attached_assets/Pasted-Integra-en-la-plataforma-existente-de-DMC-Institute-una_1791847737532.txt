@@ -1,0 +1,57 @@
+Integra en la plataforma existente de DMC Institute una funcionalidad real para transcribir clases grabadas usando OpenAI.
+
+Contexto:
+La plataforma ya existe. No la rehagas desde cero. No cambies el diseño general ni elimines funcionalidades actuales. Solo agrega la funcionalidad de transcripción dentro del flujo actual de "Clases / Grabaciones".
+
+Usa la API key de OpenAI que ya está precargada en Secrets. No me pidas otra key. Usa la variable existente OPENAI_API_KEY o detecta cómo ya está configurada en el proyecto.
+
+Objetivo del módulo:
+Permitir que un docente o administrador suba una grabación de clase o audio, la plataforma la transcriba con OpenAI y guarde el transcript asociado a esa clase.
+
+Requisitos funcionales:
+1. Agrega una sección o acción dentro de "Clases / Grabaciones" para subir archivo de clase.
+2. Acepta archivos de audio o video, por ejemplo: mp3, mp4, m4a, wav o webm.
+3. Agrega un botón "Transcribir clase".
+4. Al presionar el botón:
+   - toma el archivo subido;
+   - lo envía a la API de transcripción de OpenAI;
+   - genera el transcript en español;
+   - guarda el transcript en el estado/base de datos/estructura actual del proyecto asociado a esa clase;
+   - muestra el transcript dentro del detalle de la clase.
+5. Agrega estados de carga:
+   - "Subiendo archivo..."
+   - "Transcribiendo clase..."
+   - "Transcripción lista"
+   - "Error al transcribir"
+6. Si el archivo es muy grande o falla, muestra un mensaje claro y no rompas la app.
+7. El transcript debe quedar disponible para el siguiente módulo de IA educativa, que generará resumen, retos, quizzes y DMC Coins.
+8. No generes todavía ejercicios ni quizzes en este paso. Este prompt es solo para transcripción.
+
+Requisitos técnicos:
+1. Inspecciona primero la estructura actual del proyecto.
+2. Identifica si el proyecto usa Python, JavaScript, TypeScript, React, backend propio u otra arquitectura.
+3. Integra la transcripción respetando la arquitectura existente.
+4. No migres la app a Streamlit.
+5. No crees una segunda plataforma paralela.
+6. Usa el SDK oficial de OpenAI ya instalado o instálalo si falta.
+7. Usa el modelo de transcripción disponible de OpenAI para audio a texto.
+8. Para generación de texto NO uses Luna en este paso. Luna se usará en el segundo módulo. Aquí solo se necesita transcripción.
+9. Mantén segura la API key: nunca la muestres en pantalla, logs ni código público.
+
+Contexto de transcripción:
+Esta es una clase de DMC Institute para estudiantes de tecnología, datos e inteligencia artificial.
+La transcripción debe conservar términos técnicos como:
+SQL, Python, dashboard, API, modelo, variable, prompt, RAG, transcript, DMC Coins, quiz, reto, clase, cohorte.
+
+Resultado esperado:
+Al terminar, la plataforma debe permitir:
+- subir una grabación o audio de clase;
+- transcribirlo con OpenAI;
+- ver el transcript dentro de la clase;
+- dejar ese transcript guardado y listo para ser usado por el módulo 2.
+
+Antes de terminar:
+1. Prueba el flujo con un archivo pequeño o una simulación segura.
+2. Confirma que la app sigue cargando.
+3. Confirma que no se rompió la vista actual de alumno.
+4. Resume qué archivos modificaste y cómo probar la transcripción.

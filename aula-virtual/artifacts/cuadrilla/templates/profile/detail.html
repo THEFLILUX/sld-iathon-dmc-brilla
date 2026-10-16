@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block content %}
+{% if origen %}<p class="crumbs"><a href="{{ origen }}">{{ 'Volver al alumno' if curso else 'Volver a usuarios' }}</a> › Perfil</p>{% endif %}
+<div class="profile-heading">
+  <div><h1 class="page-title">{{ 'Mi perfil' if propio else 'Perfil del usuario' }}</h1>
+    <p class="page-sub">{{ 'Tu experiencia y tus objetivos nos ayudan a acompañar mejor tu aprendizaje.' if propio else 'Información académica y profesional del usuario.' }}</p></div>
+  {% if propio and not editar %}<a class="btn" href="{{ url_for('user_profile_edit') }}">Editar perfil</a>{% endif %}
+</div>
+{% if curso %}{% include "teacher/_course_nav.html" %}{% endif %}
+<div class="profile-layout">
+  <div class="stack">
+    <section class="card" aria-labelledby="t-perfil">
+      <div class="profile-identity"><span class="avatar profile-avatar" aria-hidden="true">{{ persona.nombre[:1] }}{{ persona.apellido[:1] }}</span>
+        <div><h2 class="card-title" id="t-perfil">{{ persona.nombre_completo }}</h2><span class="chip">{{ {'alumno':'Alumno','docente':'Docente','admin':'Administrador'}[persona.rol] }}</span></div>
+      </div>
+      {% if editar %}
+      <p class="small muted">Puedes dejar campos vacíos. Revisa la información antes de guardarla.</p>
+      <form method="post" action="{{ url_for('user_profile_save') }}" class="form" data-profile-edit>
+        <input type="hidden" name="_csrf" value="{{ csrf }}"><input type="hidden" name="version" value="{{ perfil.version }}">
+        <div class="profile-fields">
+          {% for c in campos %}
+          <label for="perfil-{{ c.clave }}">{{ c.etiqueta }}
+            {% if c.tipo == 'select' %}
+            <select id="perfil-{{ c.clave }}" name="{{ c.clave }}"><option value="">Sin indicar</option>{% for opcion in c.opciones %}<option value="{{ opcion }}"{% if form.get(c.clave) == opcion %} selected{% endif %}>{{ opcion }}</option>{% endfor %}</select>
+            {% elif c.tipo == 'textarea' %}
+            <textarea id="perfil-{{ c.clave }}" name="{{ c.clave }}" rows="3" minlength="3" maxlength="{{ c.max }}"{% if c.ayuda %} aria-describedby="ayuda-{{ c.clave }}"{% endif %}>{{ form.get(c.clave, '') }}</textarea>
+            {% else %}
+            <input id="perfil-{{ c.clave }}" name="{{ c.clave }}" type="{{ c.tipo }}" value="{{ form.get(c.clave, '') }}"{% if c.tipo == 'number' %} min="{{ c.min }}" max="{{ c.max }}" step="1"{% elif c.tipo == 'date' %} min="2000-01-01" max="{{ hoy }}"{% else %} minlength="3" maxlength="{{ c.max }}"{% endif %}>
+            {% endif %}
+            {% if c.ayuda %}<span class="hint" id="ayuda-{{ c.clave }}">{{ c.ayuda }}</span>{% endif %}
+          </label>
+          {% endfor %}
+        </div>
+        <label class="check"><input type="checkbox" name="confirmo" value="si" required> He revisado los datos y confirmo que describen mi experiencia.</label>
+        <div class="btn-row"><button class="btn" type="submit">Guardar perfil</button><a class="btn btn-ghost" href="{{ url_for('user_profile') }}">Cancelar</a></div>
+      </form>
+      {% else %}
+      <p class="small muted">{{ icon('lock') }} {% if propio %}Campos en modo de consulta. Pulsa «Editar perfil» para modificarlos.{% else %}Perfil en modo de consulta. Solo su titular puede editarlo.{% endif %}</p>
+      <dl class="profile-fields profile-values">
+        {% for c in campos %}<div><dt>{{ c.etiqueta }}</dt><dd>{{ datos.get(c.clave, '') or 'Sin indicar' }}{% if c.clave == 'edad' and datos.get(c.clave) %} años{% endif %}{% if c.clave == 'horas_semana' and datos.get(c.clave) %} h/semana{% endif %}</dd></div>{% endfor %}
+      </dl>
+      {% endif %}
+      {% if perfil.confirmado_en %}<p class="tiny muted">Última confirmación: {{ perfil.confirmado_en|fecha_hora }}.</p>{% endif %}
+    </section>
+  </div>
+  <aside class="stack">
+    <section class="card" aria-labelledby="t-bono-perfil">
+      <h2 class="card-title" id="t-bono-perfil">{{ icon('coin') }} Completa tu perfil</h2>
+      {% if persona.rol == 'alumno' %}
+      <p><strong>0,5 DMC Coin por cada campo completado.</strong></p>
+      <p class="small muted">Se acredita 1 Coin por cada dos campos distintos, una sola vez. Los 12 campos permiten obtener hasta 6 Coins.</p>
+      <progress class="bar" value="{{ completados }}" max="12" aria-label="Campos del perfil completados">{{ completados }} de 12</progress>
+      <p class="small"><strong>{{ completados }} de 12 campos</strong> completos.</p>
+      <div class="profile-reward"><strong>{{ ganadas }}</strong><span>Coins acreditadas por el perfil</span></div>
+      {% if not perfil.confirmado_en %}<p class="small muted">Revisa y guarda el perfil para recibir la recompensa.</p>{% endif %}
+      {% if medias_pendientes and not perfil.es_ejemplo %}<p class="small muted">Tienes 0,5 Coin pendiente: completa otro campo nuevo para acreditar 1 Coin.</p>{% endif %}
+      {% if persona.coins_pausadas %}<p class="small muted">Las Coins están en pausa. Puedes guardar tus datos; vuelve a guardar el perfil cuando el administrador reactive las Coins para acreditar lo pendiente.</p>{% endif %}
+      <p class="tiny muted">Modificar o volver a completar un campo ya reconocido no repite la recompensa. El perfil no suma EXP.</p>
+      {% if propio %}<a class="btn btn-sm btn-ghost" href="{{ url_for('student_coins') }}">Ver Mis Coins</a>{% endif %}
+      {% else %}<p class="small muted">La bonificación de 0,5 Coin por campo corresponde a los perfiles de alumno. Los perfiles de docentes y administradores también pueden editarse.</p>{% endif %}
+    </section>
+    <section class="card" aria-labelledby="t-contexto-perfil">
+      <h2 class="card-title" id="t-contexto-perfil">{{ icon('book') }} Trayectoria en DMC</h2>
+      <dl class="profile-context"><div><dt>Tiempo en DMC</dt><dd>{{ antiguedad_meses ~ ' meses' if antiguedad_meses is not none else 'Sin indicar' }}</dd></div><div><dt>Cursos previos declarados</dt><dd>{{ cursos_previos_cantidad if datos.get('cursos_previos') else 'Sin indicar' }}</dd></div></dl>
+      <p class="tiny muted">Información del perfil; no modifica las matrículas ni certifica cursos aprobados.</p>
+    </section>
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content_class %} narrow{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('admin_home') }}">Administración</a> › <a href="{{ url_for('admin_course', curso_id=curso.id) }}">{{ curso.nombre }}</a> › Eliminar</p>
+<h1 class="page-title">Eliminar definitivamente</h1>
+<p class="page-sub">Curso: <strong>{{ curso.nombre }}</strong> · ID {{ curso.id }}</p>
+<section class="card">
+  <div class="callout callout-err"><p>Se borrará el curso con su malla, brochure, clases y grabaciones, retos, respuestas, progreso, tareas, mensajes, revisiones, registros de IA y matrículas. No se puede deshacer desde la aplicación.</p></div>
+  <dl class="kv">
+    <dt>Temas</dt><dd>{{ resumen.temas|miles }}</dd>
+    <dt>Clases y grabaciones</dt><dd>{{ resumen.clases|miles }} clases · {{ resumen.archivos|miles }} archivos</dd>
+    <dt>Retos y quizzes</dt><dd>{{ resumen.retos|miles }} retos · {{ resumen.quizzes|miles }} quizzes</dd>
+    <dt>Respuestas de alumnos</dt><dd>{{ resumen.intentos|miles }}</dd>
+    <dt>Matrículas</dt><dd>{{ resumen.inscripciones|miles }}</dd>
+    <dt>Recompensas del curso</dt><dd>{{ resumen.exp|miles }} EXP · {{ resumen.coins|miles }} Coins</dd>
+  </dl>
+  <p class="small">Las cuentas de alumnos y docentes, los demás cursos y los canjes de la cuenta se conservan. Las EXP y Coins de este curso se retiran del saldo. Si ya se canjearon y el saldo quedaría negativo, primero hay que corregir los canjes afectados en Administración → Canjes.</p>
+  <p class="small">No se paga el podio al eliminar. Para conservar el historial al culminar el curso, usa <a href="{{ url_for('admin_course', curso_id=curso.id) }}">Cerrar curso</a>.</p>
+  <form method="post" action="{{ url_for('admin_course_delete_post', curso_id=curso.id) }}" class="form" data-delete data-confirm="¿Eliminar definitivamente el curso «{{ curso.nombre }}» y todos sus datos asociados? Esta acción no se puede deshacer." data-confirm-title="Eliminar curso" data-confirm-label="Eliminar definitivamente">
+    <input type="hidden" name="_csrf" value="{{ csrf }}">
+    <label>Escribe el nombre exacto del curso: <strong>{{ curso.nombre }}</strong><input name="nombre_confirmado" required maxlength="250" autocomplete="off"></label>
+    <label class="check"><input type="checkbox" name="confirmo" value="si" required> Entiendo que se eliminarán definitivamente el curso y sus datos.</label>
+    <div class="btn-row"><button class="btn btn-danger" type="submit">Eliminar curso definitivamente</button><a class="btn btn-ghost" href="{{ url_for('admin_course', curso_id=curso.id) }}">Cancelar</a></div>
+  </form>
+</section>
+{% endblock %}

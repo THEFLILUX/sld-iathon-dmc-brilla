@@ -1,0 +1,11 @@
+{% from "_icons.html" import icon %}
+{% macro notification(kind='info', title=None, flash=false) -%}
+<article class="notification notification-{{ kind }}" data-notification{% if flash %} data-notification-flash{% endif %}>
+  <span class="notification-symbol" aria-hidden="true">{{ icon('check' if kind == 'success' else 'alert' if kind in ('error', 'warning') else 'clock') }}</span>
+  <div class="notification-body" role="{{ 'alert' if kind == 'error' else 'status' }}" aria-atomic="true">
+    <p class="notification-title">{{ title or {'success': 'Listo', 'error': 'Ocurrió un error', 'warning': 'Atención', 'info': 'Información'}[kind] }}</p>
+    <div class="notification-copy">{{ caller() }}</div>
+  </div>
+  <button class="notification-close" type="button" data-notification-close aria-label="Cerrar notificación" title="Cerrar notificación">{{ icon('close') }}</button>
+</article>
+{%- endmacro %}

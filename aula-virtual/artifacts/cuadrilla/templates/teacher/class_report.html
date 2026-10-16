@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('teacher_home') }}">Mis cursos</a> › <a href="{{ url_for('teacher_course', curso_id=curso.id) }}">{{ curso.nombre }}</a> › <a href="{{ url_for('teacher_class', clase_id=clase.id) }}">{{ clase.nombre }}</a> › Reporte</p>
+<h1 class="page-title">Reporte · {{ clase.nombre }}</h1>
+<p class="page-sub"><strong>{{ reporte.participacion }} de {{ reporte.inscritos }} alumnos practicaron</strong> el quiz de esta clase. El estado por tema considera toda la práctica del alumno en ese tema.</p>
+{% include "teacher/_course_nav.html" %}
+
+<section class="card" aria-labelledby="t-temas">
+  <h2 class="card-title" id="t-temas">{{ icon('chart') }} Por tema</h2>
+  <div class="legend"><span><i class="s-dominado"></i>Dominado</span><span><i class="s-en_progreso"></i>En progreso</span><span><i class="s-debil"></i>Débil</span><span><i class="s-sin_datos"></i>Sin datos</span></div>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Tema</th><th>Distribución</th><th class="num">Dominio prom.</th><th class="num">Con datos</th><th>Lectura</th></tr></thead>
+    <tbody>
+    {% for f in reporte.temas %}
+    <tr>
+      <td><strong>{{ f.tema.etiqueta }}</strong></td>
+      <td><svg class="stacked" viewBox="0 0 {{ f.porcentajes.values()|sum or 100 }} 12" preserveAspectRatio="none" role="img" aria-label="Dominado {{ f.porcentajes.dominado }}%, en progreso {{ f.porcentajes.en_progreso }}%, débil {{ f.porcentajes.debil }}%, sin datos {{ f.porcentajes.sin_datos }}%">
+        {% set segmentos = namespace(x=0) %}{% for e in ('dominado', 'en_progreso', 'debil', 'sin_datos') %}{% if f.porcentajes[e] %}<rect class="s-{{ e }}" x="{{ segmentos.x }}" y="0" width="{{ f.porcentajes[e] }}" height="12"><title>{{ ESTADO_TEMA[e] }} {{ f.porcentajes[e] }}%</title></rect>{% set segmentos.x = segmentos.x + f.porcentajes[e] %}{% endif %}{% endfor %}
+      </svg><div class="tiny muted">{{ f.porcentajes.dominado }}% · {{ f.porcentajes.en_progreso }}% · {{ f.porcentajes.debil }}% · {{ f.porcentajes.sin_datos }}%</div></td>
+      <td class="num">{{ f.promedio ~ '%' if f.promedio is not none else '—' }}</td>
+      <td class="num">{{ f.con_datos }} de {{ reporte.inscritos }}</td>
+      <td>{% if f.dominado_por_clase %}<span class="chip chip-ok">Dominado por la clase</span>{% elif f.pocos_datos %}<span class="chip">Pocos datos</span>{% elif f.porcentajes.debil >= 30 %}<span class="chip chip-err">Reforzar</span>{% else %}<span class="chip chip-info">En progreso</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  <p class="tiny muted">Un tema no se marca como dominado por la clase con menos de 5 alumnos con datos.</p>
+</section>
+
+<div class="grid-2 mt-module">
+  <section class="card" aria-labelledby="t-ranking">
+    <h2 class="card-title" id="t-ranking">{{ icon('alert') }} Temas a reforzar</h2>
+    {% if reporte.ranking %}
+    <ol class="list">
+      {% for f in reporte.ranking %}
+      <li><div class="grow"><strong>{{ loop.index }}. {{ f.tema.etiqueta }}</strong> <span class="chip chip-err">{{ f.porcentajes.debil }}% débil</span>
+        <div class="small">{% for a in f.debiles %}<a href="{{ url_for('teacher_student', curso_id=curso.id, alumno_id=a.id) }}">{{ a.nombre_completo }}</a>{{ ', ' if not loop.last }}{% endfor %}</div></div></li>
+      {% endfor %}
+    </ol>
+    {% else %}<p class="muted">No hay temas con alumnos en estado débil.</p>{% endif %}
+  </section>
+  <section class="card" aria-labelledby="t-errores">
+    <h2 class="card-title" id="t-errores">{{ icon('flag') }} Errores más frecuentes</h2>
+    {% if reporte.errores %}
+    <ul class="moves">{% for tag, n in reporte.errores %}<li><span>{{ tag }}</span><strong>{{ n }}</strong></li>{% endfor %}</ul>
+    {% else %}<p class="muted">Aún no hay errores registrados.</p>{% endif %}
+    <h3 class="sub-title">Temas de la malla sin clase</h3>
+    {% if reporte.no_cubiertos %}<p class="small">{{ reporte.no_cubiertos|map(attribute='etiqueta')|join(' · ') }}</p>{% else %}<p class="small muted">Ninguno.</p>{% endif %}
+  </section>
+</div>
+{% endblock %}

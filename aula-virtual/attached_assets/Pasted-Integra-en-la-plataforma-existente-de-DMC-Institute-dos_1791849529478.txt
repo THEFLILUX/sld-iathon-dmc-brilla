@@ -1,0 +1,132 @@
+Integra en la plataforma existente de DMC Institute dos vistas separadas: vista Profesor y vista Estudiante.
+
+Contexto:
+La plataforma ya existe. No la rehagas desde cero. No cambies el diseño general ni elimines funcionalidades actuales. No crees una app paralela. Integra estas vistas dentro de la arquitectura actual.
+
+Objetivo:
+La plataforma debe tener dos perfiles principales:
+1. Profesor / docente
+2. Estudiante / alumno
+
+La vista Estudiante debe permitir:
+1. Ver sus clases publicadas.
+2. Ver grabación, transcript, resumen y conceptos clave.
+3. Resolver quizzes y retos generados con IA.
+4. Ver feedback de sus respuestas.
+5. Ver sus DMC Coins.
+6. Ver su progreso personal.
+7. Ver qué temas domina y qué temas necesita reforzar.
+8. Ver clases pendientes o clases que se perdió.
+9. Ver recomendaciones de práctica.
+
+La vista Profesor debe permitir:
+1. Ver lista de estudiantes.
+2. Ver lista de clases.
+3. Ver qué alumnos respondieron quizzes/retos.
+4. Ver qué aprendieron los alumnos.
+5. Ver en qué temas o campos tienen dificultades.
+6. Ver qué estudiantes faltaron o tienen clases pendientes.
+7. Ver cuánto tiempo o actividad dedica cada estudiante al curso, si existe ese dato.
+8. Ver DMC Coins ganados por estudiante.
+9. Ver una “huella digital de aprendizaje” por estudiante.
+
+Define la “huella digital de aprendizaje” como un perfil individual del estudiante que muestre:
+- temas dominados;
+- temas débiles;
+- clases vistas;
+- clases perdidas;
+- quizzes aprobados;
+- quizzes fallidos;
+- retos completados;
+- DMC Coins ganados;
+- última actividad;
+- nivel de riesgo: verde, amarillo, naranja o rojo;
+- recomendación de siguiente acción.
+
+Si todavía no hay datos reales, crea datos mock/demo coherentes para mostrar el flujo, pero deja la estructura preparada para conectarse a datos reales después.
+
+Requisitos de navegación:
+1. Agrega una forma clara de cambiar entre “Vista Profesor” y “Vista Estudiante”.
+2. Si existe un menú lateral o navegación actual, intégralo ahí.
+3. No rompas la vista móvil actual.
+4. Mantén el estilo visual existente de DMC Institute.
+
+Vista Profesor - Pantallas sugeridas:
+1. Dashboard general:
+   - total de estudiantes;
+   - estudiantes activos;
+   - estudiantes en riesgo;
+   - promedio de quizzes aprobados;
+   - DMC Coins entregados;
+   - temas con mayor dificultad.
+2. Tabla de estudiantes:
+   - nombre;
+   - progreso;
+   - coins;
+   - última actividad;
+   - clases perdidas;
+   - nivel de riesgo;
+   - botón “Ver huella”.
+3. Huella digital del estudiante:
+   - resumen del estudiante;
+   - temas dominados;
+   - temas débiles;
+   - historial de clases;
+   - respuestas recientes;
+   - feedback recibido;
+   - recomendación para el profesor.
+4. Análisis por clase:
+   - resumen de la clase;
+   - porcentaje de alumnos que completó los retos;
+   - preguntas más falladas;
+   - conceptos más difíciles.
+
+Vista Estudiante - Pantallas sugeridas:
+1. Área personal:
+   - bienvenida;
+   - DMC Coins;
+   - progreso;
+   - clases disponibles;
+   - retos pendientes.
+2. Detalle de clase:
+   - grabación;
+   - transcript;
+   - resumen;
+   - conceptos clave;
+   - quizzes y retos.
+3. Mi progreso:
+   - temas dominados;
+   - temas por reforzar;
+   - coins ganados;
+   - historial de respuestas;
+   - recomendaciones.
+
+Reglas de producto:
+1. El estudiante solo ve sus propios datos.
+2. El profesor puede ver datos de todos los estudiantes de su curso.
+3. La huella digital no debe mostrar información sensible innecesaria.
+4. El riesgo no debe sonar punitivo; debe servir para ayudar.
+5. Los DMC Coins deben estar conectados a respuestas aprobadas, retos completados y progreso real.
+
+Requisitos técnicos:
+1. Inspecciona la estructura actual del proyecto antes de modificar.
+2. Respeta los componentes, rutas, estilos y estado actual.
+3. Reutiliza los datos existentes si ya hay clases, quizzes, respuestas o coins.
+4. Si faltan datos, crea una capa de datos mock/demo centralizada y fácil de reemplazar.
+5. Evita duplicar lógica.
+6. Mantén componentes separados para:
+   - StudentView
+   - TeacherView
+   - StudentLearningFingerprint
+   - TeacherDashboard
+   - ClassAnalytics
+7. Asegura que la app siga funcionando en mobile.
+8. No expongas API keys ni secretos.
+9. No elimines la integración existente con OpenAI.
+
+Antes de terminar:
+1. Prueba cambiar entre vista Profesor y vista Estudiante.
+2. Prueba abrir la huella digital de un estudiante.
+3. Prueba ver análisis por clase.
+4. Confirma que la vista Estudiante sigue mostrando clases, retos, coins y progreso.
+5. Resume qué archivos modificaste y cómo probar las dos vistas.

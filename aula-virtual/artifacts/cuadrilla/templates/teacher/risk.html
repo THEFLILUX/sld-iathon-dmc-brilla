@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('teacher_home') }}">Mis cursos</a> › <a href="{{ url_for('teacher_course', curso_id=curso.id) }}">{{ curso.nombre }}</a> › En riesgo</p>
+<h1 class="page-title">Alumnos en riesgo</h1>
+<p class="page-sub">Inactividad de {{ params.riesgo_inactividad_dias }} días o más, o una caída de {{ params.riesgo_caida_puntos }} puntos o más del dominio promedio en {{ params.riesgo_caida_dias }} días. El sistema no contacta al alumno: solo te avisa a ti.</p>
+{% include "teacher/_course_nav.html" %}
+<section class="card">
+  {% if filas %}
+  <div class="table-wrap"><table class="table cards">
+    <thead><tr><th>Alumno</th><th>Motivo</th><th>Última actividad</th><th>Estado</th><th></th></tr></thead>
+    <tbody>{% for f in filas %}
+      <tr>
+        <td data-label="Alumno"><a href="{{ url_for('teacher_student', curso_id=curso.id, alumno_id=f.alumno.id) }}"><strong>{{ f.alumno.nombre_completo }}</strong></a></td>
+        <td data-label="Motivo"><span class="chip {{ 'chip-warn' if f.senal.tipo == 'inactividad' else 'chip-err' }}">{{ 'Inactividad' if f.senal.tipo == 'inactividad' else 'Caída de desempeño' }}</span> <span class="small">{{ f.senal.detalle }}</span></td>
+        <td data-label="Última actividad">{{ f.ultima|fecha_hora if f.ultima else 'Sin actividad' }}</td>
+        <td data-label="Estado">{% if f.senal.estado == 'contactado' %}<span class="chip chip-ok">Contactado {{ f.senal.contactado_en|fecha }}</span>{% else %}<span class="chip chip-cyan">Nuevo</span>{% endif %}</td>
+        <td>{% if f.senal.estado != 'contactado' %}
+          <form method="post" action="{{ url_for('teacher_risk_contacted', curso_id=curso.id, senal_id=f.senal.id) }}" class="inline"><input type="hidden" name="_csrf" value="{{ csrf }}"><button class="btn btn-sm btn-ghost" type="submit">Marcar contactado</button></form>
+        {% endif %}</td>
+      </tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}
+  <div class="empty"><h3>Nadie en riesgo por ahora</h3><p>Las alertas aparecen cuando hay clases publicadas y un alumno deja de practicar o baja su dominio.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

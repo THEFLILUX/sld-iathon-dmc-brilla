@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% macro tarjeta(c) %}
+{% set url_curso = url_for('teacher_course', curso_id=c.id) %}
+<article class="course-card" aria-labelledby="curso-{{ c.id }}">
+  <a class="course-cover cover-{{ c|color_curso }}" href="{{ url_curso }}">
+    <span class="course-badge" aria-hidden="true">{{ c.nombre|sigla }}</span>
+    <span>
+      <span class="course-name" id="curso-{{ c.id }}">{{ c.nombre }}</span>
+      <span class="course-meta">{{ 'DMC Institute' if usuario.rol == 'admin' else usuario.nombre_completo }}</span>
+    </span>
+    <span class="course-state">{{ 'En curso' if c.estado == 'activo' else 'Finalizado' }}</span>
+  </a>
+  <div class="course-body">
+    <div class="course-actions"><a class="btn" href="{{ url_curso }}">Entrar al curso</a></div>
+  </div>
+</article>
+{% endmacro %}
+{% block content %}
+<p class="crumbs">Aula virtual</p>
+<h1 class="page-title">Mis cursos</h1>
+<p class="page-sub">{{ 'Todos los cursos de DMC.' if usuario.rol == 'admin' else 'Hola, ' ~ usuario.nombre ~ '. Elige un curso para subir sus clases y acompañar a tus alumnos.' }}</p>
+{% if cursos %}
+{% for estado, etiqueta in (('activo', 'En curso'), ('cerrado', 'Finalizados')) %}
+  {% set grupo = cursos|selectattr('estado', 'equalto', estado)|list %}
+  {% if grupo %}
+  <h2 class="section-title">{{ etiqueta }}</h2>
+  <div class="course-grid">{% for c in grupo %}{{ tarjeta(c) }}{% endfor %}</div>
+  {% endif %}
+{% endfor %}
+{% else %}
+<div class="empty"><h3>No tienes cursos asignados</h3><p>El administrador de DMC te asigna a tus cursos.</p></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,10 @@
+{% from "_icons.html" import icon %}
+<nav class="course-nav" aria-label="Navegación del curso">
+  {% for destino, etiqueta, ico, clave in (
+    ('student_course', 'Clases', 'book', 'curso'),
+    ('student_progress', 'Mi progreso', 'chart', 'progreso'),
+    ('student_podium', 'Podio', 'trophy', 'podio')
+  ) %}
+  <a href="{{ url_for(destino, curso_id=curso.id) }}" class="{{ 'active' if active_nav == clave }}"{% if active_nav == clave %} aria-current="page"{% endif %}>{{ icon(ico) }}<span>{{ etiqueta }}</span></a>
+  {% endfor %}
+</nav>

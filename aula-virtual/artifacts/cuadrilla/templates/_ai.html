@@ -1,0 +1,7 @@
+{# Shared marker for actions that call an AI provider, including queued work. #}
+{% macro ai_button(label, enabled=true, cls='btn', name=None, value=None, submit_hook=false, active=true, confirm=None) -%}
+<button class="{{ cls }}" type="submit"{% if name %} name="{{ name }}" value="{{ value }}"{% endif %}{% if submit_hook %} data-submit{% endif %}{% if confirm %} data-confirm="{{ confirm }}"{% endif %}{% if enabled and active %} data-ai-action title="Brilla · Acción con inteligencia artificial"{% endif %}>
+  {% if enabled %}<span class="ai-mark" aria-hidden="true"{% if not active %} hidden{% endif %}><img src="{{ url_for('static', path='img/brilla-ai.png') }}" alt="" width="24" height="24"><span>IA</span></span><span class="sr-only" data-ai-label{% if not active %} hidden{% endif %}>Brilla, inteligencia artificial: </span>{% endif %}
+  <span>{{ label }}</span>
+</button>
+{%- endmacro %}

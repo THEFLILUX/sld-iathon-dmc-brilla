@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_macros.html" import tipo_reto %}
+{% block scripts %}<script src="{{ url_for('static', path='js/quiz.js') }}" defer></script>{% endblock %}
+{% block body_attrs %}{% if intento and intento.resultado == 'correcto' %} data-celebrate="semanal-{{ semanal.id }}"{% endif %}{% endblock %}
+{% block content_class %} narrow{% endblock %}
+{% block notifications %}
+{{ super() }}
+{% if coins %}{% call notification('success') %}Ganaste {{ coins }} Coins.{% endcall %}{% endif %}
+{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('student_home') }}">Mis cursos</a> › <a href="{{ url_for('student_course', curso_id=curso.id) }}">{{ curso.nombre }}</a> › Reto semanal</p>
+{% include "student/_course_nav.html" %}
+{% if estado not in ('disponible', 'completado') %}
+<div class="empty"><h3>{{ 'Preparando el reto de esta semana' if estado == 'preparando' else 'No hay reto semanal disponible' }}</h3>
+  <p>{{ 'Vuelve en unos minutos.' if estado == 'preparando' else 'Revisa de nuevo el lunes.' }}</p></div>
+{% else %}
+<article class="card reto" aria-labelledby="enunciado">
+  <span class="tag-corner repaso">RETO SEMANAL</span>
+  <div class="reto-meta">
+    <span>Tema: <strong>{{ tema.etiqueta }}</strong></span>
+    <span>Nivel: <strong>{{ NIVEL[version.nivel] }}</strong></span>
+    <span>{{ tipo_reto(version.tipo) }}</span>
+    <span class="chip">Un solo intento</span>
+  </div>
+  {% if not semanal.tema_visto %}<p class="small muted" style="margin-top:-6px">Tema de la malla que aún no se ve en clase: es más general y no afecta tu dominio.</p>{% endif %}
+  <p class="enunciado" id="enunciado">{{ version.enunciado }}</p>
+  {% if not intento %}
+    {% set accion_responder = url_for('student_weekly_answer', curso_id=curso.id) %}
+    {% set extra_fields = {'envio_id': envio_id} %}
+    {% set respuesta = '' %}
+    {% include "student/_answer.html" %}
+    <section id="pistas" aria-label="Pistas">
+      {% if progreso.pistas_usadas %}<ol class="hints">{% for p in version.pistas[:progreso.pistas_usadas] %}<li><b>Pista {{ loop.index }}.</b> {{ p }}</li>{% endfor %}</ol>{% endif %}
+      {% if progreso.pistas_usadas < 3 %}
+      <div class="btn-row">
+        <form method="post" action="{{ url_for('student_weekly_hint', curso_id=curso.id) }}" class="inline">
+          <input type="hidden" name="_csrf" value="{{ csrf }}">
+          <button class="btn btn-ghost btn-sm" type="submit">{{ icon('bulb') }} Pedir pista ({{ progreso.pistas_usadas }}/3)</button>
+        </form>
+        <span class="tiny muted">Con pistas, el reto semanal da la mitad de EXP y no da Coins.</span>
+      </div>
+      {% endif %}
+    </section>
+  {% else %}
+    {% include "student/_feedback.html" %}
+    {% if coins %}<p class="small" data-after-celebration>Coins obtenidas: <strong>+{{ coins }}</strong></p>{% endif %}
+    <div class="btn-row"><a class="btn" href="{{ url_for('student_course', curso_id=curso.id) }}">Volver al curso</a>
+      <a class="btn btn-ghost" href="{{ url_for('student_podium', curso_id=curso.id) }}">Ver podio</a></div>
+  {% endif %}
+  <details class="report">
+    <summary>{{ icon('flag') }} Reportar error en este reto</summary>
+    <form method="post" action="{{ url_for('student_weekly_report', curso_id=curso.id) }}">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <input name="motivo" maxlength="500" placeholder="¿Qué está mal? (opcional)">
+      <button class="btn btn-sm btn-ghost" type="submit">Reportar</button>
+    </form>
+  </details>
+</article>
+{% endif %}
+{% endblock %}

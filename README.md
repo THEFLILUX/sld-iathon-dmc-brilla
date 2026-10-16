@@ -63,3 +63,7 @@ Si vas a re-exportar un workflow desde n8n para actualizar este repo, revisa pri
 ## Stack
 
 n8n (sninaore.app.n8n.cloud) · Firestore · Gemini 2.5 Flash en Vertex AI · WhatsApp Business Cloud API (Meta) · Zoom Webhooks.
+
+## Aula virtual DMC
+
+El código de la plataforma web está en [`aula-virtual/`](aula-virtual/README.md): perfiles de alumno, docente y administrador; cursos, clases, quizzes adaptativos, tareas, resúmenes y Asistente Brilla con IA, EXP y Coins. Usa FastAPI, Jinja2 y PostgreSQL; LangChain permite elegir OpenAI o Gemini en Vertex AI desde Administración. Incluye pruebas y despliegue con Docker/Caddy en GCP. Las credenciales y los datos privados no se incluyen.

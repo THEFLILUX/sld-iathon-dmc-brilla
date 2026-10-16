@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block content_class %} narrow{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('teacher_home') }}">Mis cursos</a> › <a href="{{ url_for('teacher_course', curso_id=curso.id) }}">{{ curso.nombre }}</a> › Podio</p>
+<h1 class="page-title">Podio del curso</h1>
+<p class="page-sub">Top 5 en tiempo real y el EXP de todos los alumnos. Solo cuenta el EXP; las Coins no influyen.</p>
+{% include "teacher/_course_nav.html" %}
+<section class="card">
+  <h2 class="card-title">{{ icon('trophy') }} Top 5</h2>
+  <ol class="podium">
+    {% for f in podio[:5] if f.exp > 0 %}<li><span class="place">{{ f.puesto }}</span><span>{{ f.nombre }} {{ f.apellido }}</span><span class="pts">{{ f.exp|miles }} EXP</span></li>
+    {% else %}<li style="display:block" class="muted">Aún no hay EXP en este curso.</li>{% endfor %}
+  </ol>
+</section>
+<section class="card mt-module">
+  <h2 class="card-title">Todos los alumnos</h2>
+  <ul class="moves">{% for f in podio %}<li><span>#{{ f.puesto }} · <a href="{{ url_for('teacher_student', curso_id=curso.id, alumno_id=f.alumno_id) }}">{{ f.nombre }} {{ f.apellido }}</a></span><strong>{{ f.exp|miles }} EXP</strong></li>{% endfor %}</ul>
+</section>
+{% endblock %}

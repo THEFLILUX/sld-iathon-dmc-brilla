@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block scripts %}<script src="{{ url_for('static', path='js/quiz.js') }}" defer></script>{% endblock %}
+{% block body_attrs %} data-celebrate="quiz-{{ quiz.id }}"{% endblock %}
+{% block content_class %} narrow{% endblock %}
+{% block notifications %}
+{{ super() }}
+{% if resumen.coins %}{% call notification('success') %}Ganaste {{ resumen.coins }} Coins.{% endcall %}{% endif %}
+{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('student_home') }}">Mis cursos</a> › <a href="{{ url_for('student_course', curso_id=curso.id) }}">{{ curso.nombre }}</a> › Quiz clase {{ clase.numero }}</p>
+{% include "student/_course_nav.html" %}
+<section class="card final-hero" aria-labelledby="t-final">
+  <h1 id="t-final">¡FELICIDADES! HAS GANADO {{ resumen.exp_total|miles }} XP!</h1>
+  <p>SIGUE ASÍ!</p>
+</section>
+
+<div class="grid-2 mt-module" data-after-celebration>
+  <section class="card" aria-labelledby="t-desglose">
+    <h2 class="card-title" id="t-desglose">{{ icon('check') }} Tu quiz</h2>
+    <ul class="breakdown">
+      <li><span>Retos acertados</span><strong>{{ resumen.aciertos }} de {{ resumen.total }}</strong></li>
+      <li><span>EXP de los retos</span><strong>{{ resumen.exp_retos }}</strong></li>
+      <li><span>Quiz completado</span><strong>+{{ resumen.bono_completado }}</strong></li>
+      {% if resumen.bono_perfecto %}<li><span>Quiz perfecto</span><strong>+{{ resumen.bono_perfecto }}</strong></li>{% endif %}
+      {% if resumen.coins %}<li><span>Coins obtenidas</span><strong>+{{ resumen.coins }}</strong></li>{% endif %}
+    </ul>
+    {% if resumen.pendientes %}<p class="small muted">{{ resumen.pendientes }} respuesta{{ 's' if resumen.pendientes > 1 }} quedó pendiente de calificación; su EXP se sumará al revisarla.</p>{% endif %}
+    <h3 class="sub-title">Retos</h3>
+    <ul class="mini-list">
+      {% for r in retos %}
+      <li><span class="chip">{{ r.etiqueta.esquina }}{% if r.etiqueta.contador %} · {{ r.etiqueta.contador }}{% endif %}</span>
+        <span class="muted">{{ NIVEL.get(r.item.nivel, '') }}</span>
+        {% if r.intento and r.intento.resultado %}<span class="chip {{ 'chip-ok' if r.intento.resultado == 'correcto' else 'chip-warn' if r.intento.resultado == 'parcial' else '' }}">{{ r.intento.resultado|capitalize }}</span><strong>+{{ r.intento.exp }}</strong>
+        {% else %}<span class="chip chip-info">Pendiente</span>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  <section class="card" aria-labelledby="t-podio">
+    <h2 class="card-title" id="t-podio">{{ icon('trophy') }} PODIO ACTUALIZADO</h2>
+    <ol class="podium">
+      {% for f in resumen.podio %}
+      <li class="{{ 'me' if resumen.mio and f.alumno_id == resumen.mio.alumno_id }}"><span class="place">{{ f.puesto }}</span><span>{{ f.nombre }} {{ f.apellido }}</span><span class="pts">{{ f.exp|miles }} EXP</span></li>
+      {% endfor %}
+    </ol>
+    {% if resumen.mio %}
+    <p style="margin-top:12px"><strong>Tu puesto: #{{ resumen.mio.puesto }}</strong>
+      {% if resumen.cambio > 0 %}(subiste {{ resumen.cambio }} lugar{{ 'es' if resumen.cambio > 1 }}){% elif resumen.cambio < 0 %}(bajaste {{ -resumen.cambio }} lugar{{ 'es' if resumen.cambio < -1 }}){% endif %}</p>
+    {% endif %}
+    <div class="btn-row">
+      <a class="btn btn-ghost" href="{{ url_for('student_podium', curso_id=curso.id) }}">Ver podio</a>
+      <a class="btn" href="{{ url_for('student_course', curso_id=curso.id) }}">Volver al curso</a>
+    </div>
+  </section>
+</div>
+{% endblock %}

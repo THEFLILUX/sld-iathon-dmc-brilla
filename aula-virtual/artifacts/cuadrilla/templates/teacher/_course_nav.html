@@ -1,0 +1,15 @@
+{% from "_icons.html" import icon %}
+<nav class="course-nav teacher-course-nav" aria-label="Navegación del curso">
+  {% for destino, etiqueta, ico, clave in (
+    ('teacher_course', 'Clases', 'book', 'curso'),
+    ('teacher_upload', 'Subir clase', 'upload', 'subir'),
+    ('teacher_students', 'Alumnos', 'users', 'alumnos'),
+    ('teacher_assistant', 'Asistente Brilla', 'bulb', 'asistente'),
+    ('teacher_risk', 'En riesgo', 'alert', 'riesgo'),
+    ('teacher_review', 'Revisión', 'inbox', 'revision'),
+    ('teacher_curriculum', 'Malla', 'list', 'malla'),
+    ('teacher_podium', 'Podio', 'trophy', 'podio')
+  ) %}
+  <a href="{{ url_for(destino, curso_id=curso.id) }}" class="{{ 'active' if active_nav == clave }}"{% if active_nav == clave %} aria-current="page"{% endif %}>{{ icon(ico) }}<span>{{ etiqueta }}</span></a>
+  {% endfor %}
+</nav>
