@@ -1,6 +1,8 @@
 # Asistente Brilla para docentes · 15 de octubre de 2026
 
-El docente dispone de **Asistente Brilla** dentro de cada curso y de **Consultar a Brilla** en la ficha del alumno. Permite preguntas en español, selección de alumno y actividad de los últimos 7, 30 o 90 días, o todo el historial. Los botones sugeridos rellenan la pregunta; solo **Consultar a Brilla**, identificado con la mascota y «IA», llama al proveedor.
+El docente dispone de **Asistente Brilla** en un botón flotante con la mascota, en la esquina inferior derecha de sus vistas. Abre un chat sobre la página, sin desplazar módulos. Toma el curso de la vista actual y permite cambiarlo entre los cursos autorizados; en Mis cursos elige inicialmente el primero disponible. **Consultar a Brilla** en la ficha del alumno abre el chat con ese estudiante seleccionado. Se retiró el acceso del menú interno del curso.
+
+El chat permite preguntas en español, selección de alumno o grupo y actividad de los últimos 7, 30 o 90 días, o todo el historial. Los botones sugeridos rellenan la pregunta; solo **Enviar**, identificado con la mascota y «IA», llama al proveedor. Abrir, minimizar, cambiar filtros y consultar evidencias no generan llamadas de IA. Se conserva la ruta anterior como formulario de respaldo.
 
 La recuperación combina consultas SQL delimitadas por curso con búsqueda léxica de fragmentos de transcripts publicados. Las fuentes incluyen métricas calculadas en el backend, últimos intentos y errores, dominio y repasos, señales vigentes de inactividad/caída, tareas marcadas listas, perfil académico y objetivos/rúbricas de la malla. El modelo genera hallazgos, recomendaciones y límites con referencias a esas evidencias y enlaces locales a los registros. Los objetivos y las clases no acreditan aprendizaje; el perfil es declarado y las tareas marcadas listas no equivalen a entregas verificadas ni notas oficiales.
 
@@ -8,13 +10,25 @@ Los promedios incluyen únicamente intentos completados con puntaje. Un promedio
 
 Para consultas del grupo se recuperan agregados de todos los alumnos activos y detalle de hasta doce, priorizando temas débiles y falta de práctica, sin presentarlo como ranking completo. Seleccionar un alumno o mencionarlo por nombre permite consultarlo aunque no esté en esa selección. Las menciones admiten nombres sin tildes y comparaciones hasta doce alumnos. No hay SQL generado por el modelo ni herramientas que permitan modificar información.
 
-Se reutiliza `ai/llm.py` y el proveedor configurado (OpenAI actualmente; compatible con Gemini). Antes de enviar se sustituyen nombres del curso por sus alias, se anonimizan pregunta/perfil/contenido y se aplica la guardia de privacidad existente. No se incluyen DNI, contraseñas ni edad; el modelo no recibe los nombres de las fuentes o URLs. Los alias autorizados se restituyen únicamente al presentar la respuesta al docente.
+Se reutiliza `ai/llm.py` y el proveedor configurado por administración (OpenAI o Gemini mediante Vertex AI). Antes de enviar se sustituyen nombres del curso por sus alias, se anonimizan pregunta/perfil/contenido y se aplica la guardia de privacidad existente. No se incluyen DNI, contraseñas ni edad; el modelo no recibe los nombres de las fuentes o URLs. Los alias autorizados se restituyen únicamente al presentar la respuesta al docente.
 
 GET y POST comprueban rol y matrícula docente; administración conserva su acceso existente a todos los cursos. POST exige CSRF y limita longitud/periodo/selección. Se validan las referencias devueltas contra las fuentes recuperadas; una referencia desconocida produce un error recuperable, sin mostrar el hallazgo. La salida se escapa con Jinja. Hasta dos consultas simultáneas en la instancia y una por usuario protegen los recursos. Estos controles y las instrucciones reducen errores; las recomendaciones requieren criterio y contraste docente.
 
 No se crean tablas, índices vectoriales ni historial persistente de conversaciones. Cada consulta vuelve a leer los registros activos y la respuesta usa `Cache-Control: no-store`. Las eliminaciones se coordinan con los bloqueos existentes del curso, por lo que no queda una copia indexada que pueda recuperar clases borradas. Solo se registra uso técnico de IA, sin preguntas/respuestas, con referencia `curso:{id}:asistente`, incluida en la eliminación del curso.
 
 Implementación: `services/assistant.py` recupera contexto; `ai/assistant.py` define el contrato y valida citas; `web/assistant.py` implementa rutas; la plantilla y `static/js/assistant.js` incorporan formulario, estados, referencias desplegables y accesos. No requiere otra API key ni servicios adicionales.
+
+## Chat flotante
+
+`teacher/_brilla_widget.html` y `static/js/brilla-widget.js` controlan la apertura, minimización, Escape y restitución del foco. El panel carga de forma diferida un iframe del mismo origen (`GET /docente/asistente`). Ese documento usa `teacher/assistant_panel.html` y `static/js/brilla-chat.js`; no incluye otro widget ni la navegación principal. Administradores tienen el mismo acceso desde las vistas docentes. No aparece en el perfil del alumno.
+
+Cada pregunta sigue siendo independiente: se recuperan los registros actuales con los filtros seleccionados. Las preguntas y respuestas visibles permanecen únicamente en memoria del documento mientras se navega dentro de ese chat; minimizar conserva el borrador, los filtros y los mensajes. Cambiar de curso, alumno o periodo inicia otra consulta para evitar mezclar evidencias. Recargar o salir de la página descarta los mensajes; no se usa localStorage ni se crea una tabla de conversaciones.
+
+El envío usa el POST existente y su protección CSRF. La cabecera `X-Brilla-Chat: 1` selecciona únicamente el formato de presentación: no cambia la autorización, recuperación ni validación de IA. `teacher/_assistant_result.html` es compartido con el formulario anterior. Cada respuesta lleva IDs de evidencias distintos para que las citas de varias respuestas no colisionen. «Abrir registro» navega la página principal al registro autorizado. Errores de conexión, validación o proveedor se muestran en el chat con equis de cierre y permiten reintentar conservando la pregunta.
+
+Hay estado de consulta pendiente, bloqueo de envíos duplicados, controles de al menos 44 px y adaptación a pantallas estrechas y bajas. La apertura conserva el diseño principal y suspende su recarga periódica mientras el chat está abierto. El botón conserva el PRIMARY LOGO sin texto, con fondo blanco y animación breve que respeta movimiento reducido.
+
+Verificación del chat: 191 pruebas aprobadas, incluidas apertura sin consumo de IA, cursos/roles, CSRF, salida escapada, referencias únicas y recuperación de errores. Revisión en Chrome de escritorio y a 390/320 px, consulta simulada con alumno seleccionado, apertura de cita, minimización, Escape y recuperación del foco. No se añaden dependencias ni cambios de esquema.
 
 Verificación local: 175 pruebas aprobadas, incluidas 14 nuevas de aislamiento entre cursos, CSRF, permisos, métricas/fechas, anonimización, fuentes actuales, límites de contexto, tareas declaradas, referencias inválidas, errores del proveedor, XSS y conservación de datos académicos.
 

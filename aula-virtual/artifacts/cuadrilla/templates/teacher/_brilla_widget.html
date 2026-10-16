@@ -1,0 +1,14 @@
+<a class="brilla-launcher" href="{{ url_for('teacher_assistant_panel') }}{% if curso_ctx %}?curso_id={{ curso_ctx.id }}{% endif %}"
+   data-brilla-launch aria-label="Abrir chat del Asistente Brilla" aria-haspopup="dialog" aria-expanded="false" aria-controls="brilla-panel">
+  <img src="{{ url_for('static', path='img/brilla-ai.png') }}?v=primary-20261015" alt="" width="54" height="54">
+  <span class="brilla-launcher-label">Asistente Brilla</span><span class="brilla-launcher-tag" aria-hidden="true">IA</span>
+</a>
+<dialog id="brilla-panel" class="brilla-panel" data-brilla-panel aria-labelledby="brilla-title">
+  <header class="brilla-panel-header">
+    <img src="{{ url_for('static', path='img/brilla-ai.png') }}?v=primary-20261015" alt="" width="38" height="38">
+    <div><h2 id="brilla-title">Asistente Brilla <span class="brilla-panel-tag">IA</span></h2><p>El avance de tus alumnos, con evidencias</p></div>
+    <button class="icon-btn" type="button" data-brilla-close aria-label="Minimizar chat de Brilla">{{ icon('close') }}</button>
+  </header>
+  <iframe title="Chat del Asistente Brilla" data-brilla-frame data-src="{{ url_for('teacher_assistant_panel') }}{% if curso_ctx %}?curso_id={{ curso_ctx.id }}{% endif %}"></iframe>
+</dialog>
+<script src="{{ url_for('static', path='js/brilla-widget.js') }}?v=20261015-chat" defer></script>

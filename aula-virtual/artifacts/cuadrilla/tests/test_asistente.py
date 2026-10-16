@@ -2,6 +2,7 @@
 import apoyo  # noqa: F401
 
 import json
+import re
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -51,6 +52,69 @@ class AsistenteTest(apoyo.Caso):
         self.assertEqual(self.modelo.componentes, [])
         self.assertIn('Asistente Brilla', self.web.get(f'/docente/cursos/{self.curso.id}').text)
         self.assertIn('Consultar a Brilla', self.web.get(f'/docente/cursos/{self.curso.id}/alumnos/{self.alumna.id}').text)
+
+    def test_panel_flotante_contexto_autorizado_y_sin_ia_al_abrir(self):
+        for path in ('/docente', f'/docente/cursos/{self.curso.id}'):
+            self.assertIn('data-brilla-launch', self.web.get(path).text)
+        r = self.web.get(f'/docente/asistente?curso_id={self.curso.id}&alumno_id={self.alumna.id}')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.headers['cache-control'], 'no-store')
+        self.assertIn('data-chat-form', r.text)
+        self.assertIn(f'value="{self.alumna.id}" selected', r.text)
+        self.assertIn('name="_csrf"', r.text)
+        self.assertNotIn('data-brilla-launch', r.text)  # No nested widget inside its frame.
+        other = self.cliente('20000002')
+        self.assertEqual(other.get(f'/docente/asistente?curso_id={self.curso.id}').status_code, 404)
+        self.assertEqual(self.cliente('70000001').get('/docente/asistente').status_code, 403)
+        self.assertEqual(self.cliente().get('/docente/asistente').status_code, 303)
+        with SessionLocal.begin() as db:
+            foreign = Usuario(dni='99999991', nombre='Restringido', apellido='Fuera', rol='alumno', password_hash='x')
+            db.add(foreign); db.flush(); foreign_id = foreign.id
+        self.assertEqual(self.web.get(f'/docente/asistente?curso_id={self.curso.id}&alumno_id={foreign_id}').status_code, 404)
+        with SessionLocal.begin() as db:
+            other_id = db.scalar(select(Usuario.id).where(Usuario.dni == '20000002'))
+            db.query(Inscripcion).filter(Inscripcion.usuario_id == other_id, Inscripcion.rol_en_curso == 'docente').delete()
+        empty = other.get('/docente/asistente')
+        self.assertEqual(empty.status_code, 200)
+        self.assertIn('Aún no tienes cursos asignados', empty.text)
+        self.assertEqual(self.modelo.componentes, [])
+
+    def test_respuesta_chat_escapada_con_citas_unicas_y_csrf(self):
+        headers = {'X-Brilla-Chat': '1'}
+        bad = self.web.post(self.ruta, headers=headers, data={'pregunta': 'Sin protección CSRF'})
+        self.assertEqual(bad.status_code, 403)
+        self.assertEqual(self.modelo.componentes, [])
+        data = {'_csrf':self.csrf('20000001'), 'pregunta':'¿Cómo va el aprendizaje del alumno?',
+                'alumno_id':str(self.alumna.id), 'periodo':'7'}
+        response = {'hallazgos':[{'texto':'<img src=x onerror=alert(1)>', 'fuentes':['F1']}],
+                    'recomendaciones':[], 'limites':['Sin notas oficiales.']}
+        with patch.object(self.modelo, 'asistente_docente', return_value=response):
+            r = self.web.post(self.ruta, headers=headers, data=data)
+            second = self.web.post(self.ruta, headers=headers, data=data)
+        self.assertEqual(r.status_code, 200)
+        self.assertIn('data-chat-answer', r.text)
+        self.assertNotIn('<html', r.text)
+        self.assertNotIn('<img src=x', r.text)
+        self.assertIn('&lt;img', r.text)
+        self.assertIn('target="_top"', r.text)
+        source = re.search(r'href="#(turn-[a-f0-9]+-fuente-F1)"', r.text).group(1)
+        self.assertIn(f'id="{source}"', r.text)
+        self.assertNotIn(f'id="{source}"', second.text)
+        self.assertIn('Últimos 7 días', r.text)
+        self.assertEqual(r.headers['cache-control'], 'no-store')
+
+    def test_error_chat_recuperable_sin_documento_completo(self):
+        data={'_csrf':self.csrf('20000001'), 'pregunta':'¿Qué temas debería reforzar?', 'periodo':'999'}
+        r=self.web.post(self.ruta, headers={'X-Brilla-Chat':'1'}, data=data)
+        self.assertEqual(r.status_code, 400)
+        self.assertIn('data-chat-answer', r.text)
+        self.assertIn('data-chat-error-close', r.text)
+        self.assertEqual(self.modelo.componentes, [])
+        self.modelo.fallar.add('asistente_docente')
+        data['periodo']='30'
+        self.assertEqual(self.web.post(self.ruta, headers={'X-Brilla-Chat':'1'}, data=data).status_code, 503)
+        self.modelo.fallar.clear()
+        self.assertEqual(self.web.post(self.ruta, headers={'X-Brilla-Chat':'1'}, data=data).status_code, 200)
 
     def test_roles_cursos_y_csrf_antes_de_ia(self):
         for web, esperado in ((self.cliente(), 303), (self.cliente('70000001'), 403),

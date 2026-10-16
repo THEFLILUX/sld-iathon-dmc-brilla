@@ -146,7 +146,7 @@
   if (refresh > 0) {
     function refreshPage() {
       var typing = document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
-      if (typing || (dialog && dialog.open)) setTimeout(refreshPage, refresh * 1000);
+      if (typing || (dialog && dialog.open) || document.querySelector('[data-brilla-panel][open]')) setTimeout(refreshPage, refresh * 1000);
       else window.location.reload();
     }
     setTimeout(refreshPage, refresh * 1000);

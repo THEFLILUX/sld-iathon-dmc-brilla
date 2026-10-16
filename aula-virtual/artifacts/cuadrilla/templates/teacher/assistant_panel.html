@@ -1,0 +1,47 @@
+{% from "_icons.html" import icon %}
+{% from "_ai.html" import ai_button with context %}
+<!doctype html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex"><title>Chat del Asistente Brilla</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/dmc.css') }}?v=20261015-chat">
+  <script src="{{ url_for('static', path='js/brilla-chat.js') }}?v=20261015-chat" defer></script>
+</head>
+<body class="brilla-chat" data-brilla-chat>
+{% if curso %}
+  <form class="brilla-chat-form" method="post" action="{{ url_for('teacher_assistant_ask', curso_id=curso.id) }}" data-chat-form>
+    <input type="hidden" name="_csrf" value="{{ csrf }}">
+    <div class="brilla-chat-filters">
+      <label for="chat-course">Curso<select id="chat-course" data-chat-course data-url="{{ url_for('teacher_assistant_panel') }}">{% for c in cursos %}<option value="{{ c.id }}"{% if c.id == curso.id %} selected{% endif %}>{{ c.nombre }}{% if c.estado == 'cerrado' %} · Cerrado{% endif %}</option>{% endfor %}</select></label>
+      <div class="brilla-chat-filter-row">
+        <label for="chat-student">Alumno<select id="chat-student" name="alumno_id"><option value="0">Todo el curso</option>{% for a in alumnos %}<option value="{{ a.id }}"{% if a.id == alumno_id %} selected{% endif %}>{{ a.nombre_completo }}</option>{% endfor %}</select></label>
+        <label for="chat-period">Periodo<select id="chat-period" name="periodo">{% for valor, etiqueta in periodos.items() %}<option value="{{ valor }}"{% if valor == 30 %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}</select></label>
+      </div>
+    </div>
+    <div class="brilla-chat-messages" data-chat-messages role="region" aria-label="Consultas y respuestas" tabindex="0">
+      <div class="brilla-chat-welcome" data-chat-welcome>
+        <img src="{{ url_for('static', path='img/brilla-ai.png') }}?v=primary-20261015" alt="" width="68" height="68">
+        <h1>¿Cómo puedo ayudarte?</h1>
+        <p>Consulta el avance del grupo o de un alumno. Cada respuesta incluye evidencias del curso.</p>
+        <div class="brilla-chat-suggestions" aria-label="Ideas de consultas">
+          <button class="btn btn-sm btn-ghost" type="button" data-chat-question="¿Qué temas requieren refuerzo y qué actividades recomiendas según el rendimiento registrado?">Temas por reforzar</button>
+          <button class="btn btn-sm btn-ghost" type="button" data-chat-question="¿Qué señales de inactividad o dificultad aparecen y qué seguimiento docente recomiendas?">Seguimiento</button>
+          <button class="btn btn-sm btn-ghost" type="button" data-chat-question="¿Qué tareas se marcaron listas y cómo adaptar la práctica al perfil y disponibilidad del alumno?">Tareas y perfil</button>
+        </div>
+        <details class="brilla-chat-scope"><summary>¿Qué información consulta?</summary><p>Resultados de quizzes, dominio por tema, repasos, tareas marcadas, perfil académico, malla y clases. «Tarea lista» es una declaración del alumno; no acredita una entrega ni su calidad. Los conocimientos del perfil son declarados.</p></details>
+      </div>
+    </div>
+    <div class="brilla-chat-composer">
+      <p class="brilla-chat-status" data-chat-status role="status" aria-live="polite"></p>
+      <label class="sr-only" for="chat-question">Tu consulta a Brilla</label>
+      <textarea id="chat-question" name="pregunta" rows="2" minlength="8" maxlength="1200" required aria-describedby="chat-help" placeholder="Escribe tu consulta sobre el curso o un alumno…"></textarea>
+      <div class="brilla-chat-actions">{{ ai_button('Enviar', cls='btn btn-sm') }}<button class="btn btn-sm btn-ghost" type="button" data-chat-reset>Nueva consulta</button></div>
+      <p id="chat-help" class="tiny muted">Cada pregunta es independiente y usa los filtros actuales. Las recomendaciones apoyan tu criterio docente.</p>
+    </div>
+  </form>
+{% else %}
+  <div class="brilla-chat-empty"><h1>Aún no tienes cursos asignados</h1><p>Brilla estará disponible cuando tengas un curso para consultar.</p></div>
+{% endif %}
+</body>
+</html>

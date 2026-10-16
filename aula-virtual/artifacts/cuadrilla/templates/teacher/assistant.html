@@ -1,11 +1,6 @@
 {% extends "base.html" %}
 {% from "_icons.html" import icon %}
 {% from "_ai.html" import ai_button with context %}
-{% macro dato(valor) -%}
-  {% if valor is mapping %}<dl>{% for k, v in valor.items() %}<dt>{{ k }}</dt><dd>{{ dato(v) }}</dd>{% endfor %}</dl>
-  {% elif valor is sequence and valor is not string %}{% if valor %}<ul>{% for v in valor %}<li>{{ dato(v) }}</li>{% endfor %}</ul>{% else %}Sin registros{% endif %}
-  {% elif valor is none %}Sin datos{% elif valor is sameas true %}Sí{% elif valor is sameas false %}No{% else %}{{ valor }}{% endif %}
-{%- endmacro %}
 {% block scripts %}<script src="{{ url_for('static', path='js/assistant.js') }}?v=20261015" defer></script>{% endblock %}
 {% block content %}
 <p class="crumbs"><a href="{{ url_for('teacher_home') }}">Mis cursos</a> › <a href="{{ url_for('teacher_course', curso_id=curso.id) }}">{{ curso.nombre }}</a> › Asistente Brilla</p>
@@ -38,33 +33,7 @@
         <p class="small muted" data-assistant-status role="status" hidden>Brilla está revisando los registros. Esto puede tardar unos segundos…</p>
       </form>
     </section>
-    {% if resultado %}
-    <section class="card assistant-answer" aria-labelledby="t-respuesta" data-assistant-answer tabindex="-1">
-      <h2 class="card-title" id="t-respuesta">{{ icon('chart') }} Lo que muestran los registros</h2>
-      <p class="small muted">Consultado el {{ resultado.momento|fecha_hora }} (Lima) · {{ periodos[periodo] }} para actividad y puntajes.</p>
-      {% for clave, titulo in (('hallazgos', 'Hallazgos'), ('recomendaciones', 'Siguientes pasos sugeridos')) %}
-      {% if resultado.respuesta[clave] %}
-      <h3 class="sub-title">{{ titulo }}</h3>
-      <ul class="assistant-findings">{% for item in resultado.respuesta[clave] %}
-        <li><p>{{ item.texto }}</p><div class="assistant-citations" aria-label="Evidencias de esta afirmación">{% for fid in item.fuentes %}<a href="#fuente-{{ fid }}">{{ fid }}</a>{% endfor %}</div></li>
-      {% endfor %}</ul>
-      {% endif %}{% endfor %}
-      <div class="assistant-limits"><h3 class="sub-title">Alcance de la respuesta</h3><ul>{% for limite in resultado.respuesta.limites %}<li>{{ limite }}</li>{% endfor %}</ul></div>
-      <p class="tiny muted">Las recomendaciones apoyan tu criterio docente. No modifican notas, perfiles, Coins ni actividades.</p>
-    </section>
-    <section class="card" aria-labelledby="t-fuentes">
-      <h2 class="card-title" id="t-fuentes">{{ icon('book') }} Evidencias consultadas</h2>
-      <p class="small muted">Las métricas se calculan en la plataforma. El dominio y las tareas reflejan el estado vigente; el periodo filtra intentos y quizzes.</p>
-      {% if resultado.alcance.alumnos_inscritos > resultado.alcance.alumnos_con_detalle|length %}<p class="small muted">El panorama incluye todo el grupo; el detalle cubre {{ resultado.alcance.alumnos_con_detalle|length }} de {{ resultado.alcance.alumnos_inscritos }} alumnos. Selecciona uno para consultar su información.</p>{% endif %}
-      <div class="stack">{% for f in resultado.fuentes_visibles %}
-        <details class="assistant-source" id="fuente-{{ f.id }}">
-          <summary><span class="chip">{{ f.id }}</span> {{ f.titulo }}</summary>
-          {{ dato(f.datos) }}
-          <a class="btn btn-sm btn-ghost" href="{{ url_for(f.ruta, **f.params) }}">Abrir registro</a>
-        </details>
-      {% endfor %}</div>
-    </section>
-    {% endif %}
+    {% include "teacher/_assistant_result.html" %}
   </div>
   <aside class="stack">
     <section class="card" aria-labelledby="t-alcance">

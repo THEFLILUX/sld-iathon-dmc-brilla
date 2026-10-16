@@ -1,16 +1,17 @@
 """Teacher assistant: authenticated, CSRF-protected, course-scoped, read-only requests."""
 
 from datetime import datetime
+from secrets import token_hex
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 
 from ai import jobs
 from ai.llm import IAError
-from auth.deps import csrf_valido, curso_de_docente, docente_actual
+from auth.deps import csrf_valido, curso_de_docente, cursos_de, docente_actual
 from db.session import get_db
 from services import assistant, reports
 from rules.calendar import fecha_hora_lima
-from web.views import page
+from web.views import page, templates
 
 router = APIRouter(prefix="/docente")
 
@@ -35,6 +36,13 @@ def _pagina(request, db, curso, *, alumno_id=0, periodo=30, pregunta="", resulta
     if resultado:
         resultado["fuentes_visibles"] = [{**f, "datos": _dato_visible(f["datos"], resultado["aliases"])}
                                          for f in resultado["fuentes"]]
+    if request.headers.get("x-brilla-chat") == "1":
+        respuesta = templates.TemplateResponse(request=request, name="teacher/_assistant_result.html", context={
+            "resultado": resultado, "error": error, "periodos": assistant.PERIODOS, "periodo": periodo,
+            "fuente_prefijo": "turn-" + token_hex(6) + "-",
+        }, status_code=status)
+        respuesta.headers["Cache-Control"] = "no-store"
+        return respuesta
     respuesta = page(request, "teacher/assistant.html", {
         "page_title": "Asistente Brilla", "active_nav": "asistente", "curso": curso,
         "alumnos": reports.alumnos_del_curso(db, curso.id), "alumno_id": alumno_id,
@@ -43,6 +51,20 @@ def _pagina(request, db, curso, *, alumno_id=0, periodo=30, pregunta="", resulta
     }, status_code=status)
     respuesta.headers["Cache-Control"] = "no-store"
     return respuesta
+
+
+@router.get("/asistente", name="teacher_assistant_panel")
+def panel(request: Request, curso_id: int = 0, alumno_id: int = 0,
+          db=Depends(get_db), usuario=Depends(docente_actual)):
+    cursos = cursos_de(db, usuario)
+    curso = curso_de_docente(db, usuario, curso_id) if curso_id else (cursos[0] if cursos else None)
+    alumnos = reports.alumnos_del_curso(db, curso.id) if curso else []
+    if alumno_id and alumno_id not in {a.id for a in alumnos}:
+        raise HTTPException(status_code=404, detail="No encontramos ese alumno en el curso.")
+    return page(request, "teacher/assistant_panel.html", {
+        "page_title": "Asistente Brilla", "curso": curso, "cursos": cursos, "alumnos": alumnos,
+        "alumno_id": alumno_id, "periodos": assistant.PERIODOS,
+    })
 
 
 @router.get("/cursos/{curso_id}/asistente", name="teacher_assistant")

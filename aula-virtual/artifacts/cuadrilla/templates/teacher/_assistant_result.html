@@ -1,0 +1,35 @@
+{% from "_icons.html" import icon %}
+{% set fuente_prefijo = fuente_prefijo|default('') %}
+{% macro dato(valor) -%}
+  {% if valor is mapping %}<dl>{% for k, v in valor.items() %}<dt>{{ k }}</dt><dd>{{ dato(v) }}</dd>{% endfor %}</dl>
+  {% elif valor is sequence and valor is not string %}{% if valor %}<ul>{% for v in valor %}<li>{{ dato(v) }}</li>{% endfor %}</ul>{% else %}Sin registros{% endif %}
+  {% elif valor is none %}Sin datos{% elif valor is sameas true %}Sí{% elif valor is sameas false %}No{% else %}{{ valor }}{% endif %}
+{%- endmacro %}
+    {% if error and fuente_prefijo %}<div class="brilla-chat-error" data-chat-answer role="alert"><button type="button" class="icon-btn" data-chat-error-close aria-label="Cerrar aviso">{{ icon('close') }}</button><p>{{ error }}</p></div>{% endif %}
+{% if resultado %}<div class="stack" data-chat-answer> 
+    <section class="card assistant-answer" aria-labelledby="{{ fuente_prefijo }}t-respuesta" data-assistant-answer tabindex="-1">
+      <h2 class="card-title" id="{{ fuente_prefijo }}t-respuesta">{{ icon('chart') }} Lo que muestran los registros</h2>
+      <p class="small muted">Consultado el {{ resultado.momento|fecha_hora }} (Lima) · {{ periodos[periodo] }} para actividad y puntajes.</p>
+      {% for clave, titulo in (('hallazgos', 'Hallazgos'), ('recomendaciones', 'Siguientes pasos sugeridos')) %}
+      {% if resultado.respuesta[clave] %}
+      <h3 class="sub-title">{{ titulo }}</h3>
+      <ul class="assistant-findings">{% for item in resultado.respuesta[clave] %}
+        <li><p>{{ item.texto }}</p><div class="assistant-citations" aria-label="Evidencias de esta afirmación">{% for fid in item.fuentes %}<a href="#{{ fuente_prefijo }}fuente-{{ fid }}">{{ fid }}</a>{% endfor %}</div></li>
+      {% endfor %}</ul>
+      {% endif %}{% endfor %}
+      <div class="assistant-limits"><h3 class="sub-title">Alcance de la respuesta</h3><ul>{% for limite in resultado.respuesta.limites %}<li>{{ limite }}</li>{% endfor %}</ul></div>
+      <p class="tiny muted">Las recomendaciones apoyan tu criterio docente. No modifican notas, perfiles, Coins ni actividades.</p>
+    </section>
+    <section class="card" aria-labelledby="{{ fuente_prefijo }}t-fuentes">
+      <h2 class="card-title" id="{{ fuente_prefijo }}t-fuentes">{{ icon('book') }} Evidencias consultadas</h2>
+      <p class="small muted">Las métricas se calculan en la plataforma. El dominio y las tareas reflejan el estado vigente; el periodo filtra intentos y quizzes.</p>
+      {% if resultado.alcance.alumnos_inscritos > resultado.alcance.alumnos_con_detalle|length %}<p class="small muted">El panorama incluye todo el grupo; el detalle cubre {{ resultado.alcance.alumnos_con_detalle|length }} de {{ resultado.alcance.alumnos_inscritos }} alumnos. Selecciona uno para consultar su información.</p>{% endif %}
+      <div class="stack">{% for f in resultado.fuentes_visibles %}
+        <details class="assistant-source" id="{{ fuente_prefijo }}fuente-{{ f.id }}">
+          <summary><span class="chip">{{ f.id }}</span> {{ f.titulo }}</summary>
+          {{ dato(f.datos) }}
+          <a class="btn btn-sm btn-ghost" href="{{ url_for(f.ruta, **f.params) }}"{% if fuente_prefijo %} target="_top"{% endif %}>Abrir registro</a>
+        </details>
+      {% endfor %}</div>
+    </section>
+    </div>{% endif %}

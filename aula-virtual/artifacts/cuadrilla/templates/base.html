@@ -10,8 +10,8 @@
 <meta name="robots" content="noindex">
 <link rel="icon" href="{{ url_for('static', path='favicon.svg') }}" type="image/svg+xml">
 <link rel="preload" href="{{ url_for('static', path='fonts/poppins-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="{{ url_for('static', path='css/dmc.css') }}?v=20261015-primary">
-<script src="{{ url_for('static', path='js/ui.js') }}?v=20261015-notificaciones" defer></script>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/dmc.css') }}?v=20261015-chat">
+<script src="{{ url_for('static', path='js/ui.js') }}?v=20261015-chat" defer></script>
 {% block scripts %}{% endblock %}
 </head>
 {% set rol = usuario.rol if usuario else 'invitado' %}
@@ -19,7 +19,8 @@
 {% set nav_alumno = rol == 'alumno' and active_nav %}
 {% set seccion_docente = rol in ('docente', 'admin') and curso_ctx and active_nav in ('curso', 'subir', 'alumnos', 'asistente', 'riesgo', 'revision', 'malla', 'podio') %}
 {% set nav_principal = 'cursos' if curso_ctx and (rol == 'alumno' or seccion_docente) else active_nav %}
-<body class="rol-{{ rol }}{% if nav_alumno %} has-bottom-nav{% endif %}"{% block body_attrs %}{% endblock %}>
+{% set brilla_visible = rol == 'docente' or (rol == 'admin' and (seccion_docente or active_nav == 'cursos')) %}
+<body class="rol-{{ rol }}{% if nav_alumno %} has-bottom-nav{% endif %}{% if brilla_visible %} has-brilla{% endif %}"{% block body_attrs %}{% endblock %}>
 <a class="skip" href="#contenido">Saltar al contenido</a>
 <header class="topbar">
   {% if usuario %}
@@ -102,5 +103,8 @@
     <button class="btn btn-danger" type="button" data-confirm-accept>Confirmar</button>
   </div>
 </dialog>
+{% if brilla_visible %}
+  {% include "teacher/_brilla_widget.html" %}
+{% endif %}
 </body>
 </html>

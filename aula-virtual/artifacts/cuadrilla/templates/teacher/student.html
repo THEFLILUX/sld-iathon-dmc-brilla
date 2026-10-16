@@ -6,7 +6,7 @@
 <h1 class="page-title">{{ alumno.nombre_completo }}</h1>
 <p class="page-sub">{{ reporte.exp|miles }} EXP en el curso · {{ reporte.coins|miles }} Coins</p>
 {% include "teacher/_course_nav.html" %}
-<div class="btn-row"><a class="btn btn-ghost" href="{{ url_for('teacher_student_profile', curso_id=curso.id, alumno_id=alumno.id) }}">Ver perfil y experiencia</a><a class="btn btn-ghost" href="{{ url_for('teacher_assistant', curso_id=curso.id) }}?alumno_id={{ alumno.id }}">Consultar a Brilla</a></div>
+<div class="btn-row"><a class="btn btn-ghost" href="{{ url_for('teacher_student_profile', curso_id=curso.id, alumno_id=alumno.id) }}">Ver perfil y experiencia</a><a class="btn btn-ghost" data-brilla-open data-brilla-course="{{ curso.id }}" data-brilla-student="{{ alumno.id }}" href="{{ url_for('teacher_assistant', curso_id=curso.id) }}?alumno_id={{ alumno.id }}">Consultar a Brilla</a></div>
 <div class="kpis">
   {% for e in ('dominado', 'en_progreso', 'debil', 'sin_datos') %}<div class="stat"><span class="stat-n">{{ reporte.conteo.get(e, 0) }}</span><span class="stat-l">{{ ESTADO_TEMA[e] }}</span></div>{% endfor %}
 </div>
