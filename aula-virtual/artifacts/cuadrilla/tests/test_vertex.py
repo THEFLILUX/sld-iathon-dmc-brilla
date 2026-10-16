@@ -26,7 +26,7 @@ class VertexTransporteTest(apoyo.Caso):
         super().setUp(); self.demo()
         apoyo.configurar(self, LLM_PROVIDER='vertex', TRANSCRIPTION_PROVIDER='vertex', LLM_MODEL='',
             TRANSCRIPTION_MODEL='', GOOGLE_CLOUD_PROJECT='proyecto-prueba', GOOGLE_CLOUD_LOCATION='global',
-            OPENAI_API_KEY='', GOOGLE_API_KEY='no-usar-esta-clave', VERTEX_MODEL='gemini-3.5-flash-lite')
+            OPENAI_API_KEY='', GOOGLE_API_KEY='no-usar-esta-clave', VERTEX_MODEL='gemini-3.8-flash')
         self.cred = Credentials(token='token-vertex-prueba')
         self.adc = patch('google.auth.default',return_value=(self.cred,'proyecto-prueba')).start()
         self.addCleanup(patch.stopall)
@@ -37,12 +37,12 @@ class VertexTransporteTest(apoyo.Caso):
         self.assertEqual(len(salida.temas),2)
         r = capturas[0]
         self.assertEqual(r.url.host,'aiplatform.googleapis.com')
-        self.assertIn('/projects/proyecto-prueba/locations/global/publishers/google/models/gemini-3.5-flash-lite:generateContent',r.url.path)
+        self.assertIn('/projects/proyecto-prueba/locations/global/publishers/google/models/gemini-3.8-flash:generateContent',r.url.path)
         self.assertEqual(r.headers['authorization'],'Bearer token-vertex-prueba')
         self.assertNotIn('x-goog-api-key',r.headers)
         self.assertIn('responseJsonSchema',json.loads(r.content)['generationConfig'])
         with SessionLocal() as db:
-            self.assertEqual(db.scalar(select(LlamadaIA.modelo)), 'vertex:gemini-3.5-flash-lite')
+            self.assertEqual(db.scalar(select(LlamadaIA.modelo)), 'vertex:gemini-3.8-flash')
 
     def test_todos_los_contratos_de_la_aplicacion_en_vertex(self):
         ejemplos = {**EJEMPLOS, RespuestaAsistenteIA:lambda: {'hallazgos':[], 'recomendaciones':[], 'limites':['Sin datos']},
@@ -57,7 +57,7 @@ class VertexTransporteTest(apoyo.Caso):
         self.assertIn('ventas',texto)
         cuerpo = json.loads(capturas[0].content)
         self.assertTrue(any('inlineData' in p for p in cuerpo['contents'][0]['parts']))
-        self.assertIn('gemini-3.5-flash-lite',capturas[0].url.path)
+        self.assertIn('gemini-3.8-flash',capturas[0].url.path)
 
     def test_falta_adc_error_seguro_y_registrado(self):
         from google.auth.exceptions import DefaultCredentialsError
@@ -80,7 +80,7 @@ class ConfiguracionIATest(apoyo.Caso):
 
     def enviar(self, **extra):
         return self.web.post('/admin/ia',data={'_csrf':self.csrf('10000001'),'proveedor':'vertex',
-            'modelo_openai':'gpt-6-luna','audio_openai':'gpt-4o-mini-transcribe','modelo_vertex':'gemini-3.5-flash-lite',
+            'modelo_openai':'gpt-6-luna','audio_openai':'gpt-4o-mini-transcribe','modelo_vertex':'gemini-3.8-flash',
             'version':'0','accion':'activar',**extra})
 
     def contar(self):
@@ -88,7 +88,7 @@ class ConfiguracionIATest(apoyo.Caso):
 
     def test_pagina_exclusiva_admin_csrf_y_secretos_ausentes(self):
         r=self.web.get('/admin/ia');self.assertEqual(r.status_code,200)
-        self.assertIn('gemini-3.5-flash-lite',r.text)
+        self.assertIn('gemini-3.8-flash',r.text)
         self.assertIn('data-ai-action',r.text)
         self.assertNotIn('clave-falsa',r.text)
         for dni in ('20000001','70000001'):
@@ -113,10 +113,10 @@ class ConfiguracionIATest(apoyo.Caso):
         self.assertIn('Proveedor de IA activado',confirmacion.text)
         self.assertIn('data-notification-close',confirmacion.text)
         config=runtime.cargar();self.assertEqual(config.proveedor,'vertex')
-        self.assertEqual(config.modelo_audio,'gemini-3.5-flash-lite')
+        self.assertEqual(config.modelo_audio,'gemini-3.8-flash')
         self.assertTrue(settings.ai_enabled)
-        self.assertEqual(settings.modelo_llm,'gemini-3.5-flash-lite')
-        self.assertEqual(settings.modelo_transcripcion,'gemini-3.5-flash-lite')
+        self.assertEqual(settings.modelo_llm,'gemini-3.8-flash')
+        self.assertEqual(settings.modelo_transcripcion,'gemini-3.8-flash')
         self.assertIn('Gemini · Vertex AI',self.web.get('/admin').text)
         self.assertEqual(self.enviar(proveedor='openai',version=str(config.version)).status_code,303)
         self.assertEqual(runtime.actual().proveedor,'openai')
@@ -129,8 +129,8 @@ class ConfiguracionIATest(apoyo.Caso):
                 self.assertNotIn('key',json.dumps(fila.opciones).lower())
 
     def test_modelos_editables_y_no_hay_cambio_con_formulario_obsoleto(self):
-        self.assertEqual(self.enviar(modelo_vertex='gemini-3.5-flash-lite-nueva-version').status_code,303)
-        self.assertEqual(runtime.actual().modelo,'gemini-3.5-flash-lite-nueva-version')
+        self.assertEqual(self.enviar(modelo_vertex='gemini-3.8-flash-nueva-version').status_code,303)
+        self.assertEqual(runtime.actual().modelo,'gemini-3.8-flash-nueva-version')
         llamadas=len(self.modelo.componentes)
         self.assertEqual(self.enviar().status_code,400)
         self.assertEqual(len(self.modelo.componentes),llamadas)
@@ -179,6 +179,6 @@ class ConfiguracionIATest(apoyo.Caso):
 
     def test_settings_locales_y_configuracion_inicial_se_conservan(self):
         e=Settings(LLM_PROVIDER='vertex',TRANSCRIPTION_PROVIDER='vertex',LLM_MODEL='',TRANSCRIPTION_MODEL='',
-            GOOGLE_CLOUD_PROJECT='p-local',VERTEX_MODEL='gemini-3.5-flash-lite')
-        self.assertEqual(e.modelo_llm,'gemini-3.5-flash-lite');self.assertTrue(e.ai_enabled)
+            GOOGLE_CLOUD_PROJECT='p-local',VERTEX_MODEL='gemini-3.8-flash')
+        self.assertEqual(e.modelo_llm,'gemini-3.8-flash');self.assertTrue(e.ai_enabled)
         self.assertEqual(e.variable_clave(),'Credenciales de Google Cloud (ADC)')

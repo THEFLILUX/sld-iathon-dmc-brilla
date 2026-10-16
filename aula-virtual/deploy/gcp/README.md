@@ -24,7 +24,7 @@ no forman parte del repositorio ni de la imagen Docker.
 | Red | VPC `cuadrilla-demo`, subred `cuadrilla-demo-us-central1` |
 | Acceso administrativo | SSH mediante IAP; puerto 22 restringido a IAP |
 | Puertos públicos | 80 y 443; la app y PostgreSQL quedan dentro de la red Docker |
-| IA | Gemini `gemini-3.5-flash-lite` mediante Vertex AI, texto y audio; OpenAI disponible desde Administración → IA y modelos |
+| IA | Gemini `gemini-3.8-flash` mediante Vertex AI, texto y audio; OpenAI disponible desde Administración → IA y modelos |
 | Identidad de IA | Cuenta de servicio `aula-virtual-ia`, rol Vertex AI User y credenciales temporales de la VM |
 | Presupuesto | Alerta mensual de S/150, al 50%, 90% y 100%, antes de aplicar créditos |
 

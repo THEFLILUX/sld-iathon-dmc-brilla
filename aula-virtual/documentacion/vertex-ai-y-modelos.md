@@ -1,6 +1,8 @@
 # Vertex AI y selección administrativa de modelos · 15 de octubre de 2026
 
-Administración → **IA y modelos** permite seleccionar OpenAI con la API key del servidor o Gemini mediante Vertex AI. El modelo inicial de Vertex es **`gemini-3.5-flash-lite`**, usado para texto y transcripción. OpenAI conserva `gpt-6-luna` y `gpt-4o-mini-transcribe` como valores iniciales. Los identificadores se pueden editar sin modificar código.
+**Modelo vigente: `gemini-3.8-flash`, para texto y transcripción.** Ver la [actualización a Gemini 3.8 Flash](gemini-3-8-flash.md).
+
+Administración → **IA y modelos** permite seleccionar OpenAI con la API key del servidor o Gemini mediante Vertex AI. El modelo inicial de Vertex es **`gemini-3.8-flash`**, usado para texto y transcripción. OpenAI conserva `gpt-6-luna` y `gpt-4o-mini-transcribe` como valores iniciales. Los identificadores se pueden editar sin modificar código.
 
 **Probar conexión** comprueba una respuesta estructurada y la transcripción de una frase fija, sin enviar registros académicos. **Probar y activar** exige ambas comprobaciones antes de guardar. Una comprobación fallida conserva el proveedor anterior. Los botones que consumen IA muestran Brilla. Las claves no tienen campos en el formulario: OpenAI se configura en el entorno y Vertex utiliza credenciales de Google Cloud (ADC).
 
@@ -17,14 +19,14 @@ Administración → **IA y modelos** permite seleccionar OpenAI con la API key d
 
 Proyecto `project-ea6ff772-6759-45ec-925`, API `aiplatform.googleapis.com`, ubicación `global`, cuenta de servicio `aula-virtual-ia` con rol `roles/aiplatform.user`. La identidad se asigna a la VM y el contenedor obtiene credenciales temporales del servicio de metadatos. No se genera ni descarga una clave de cuenta de servicio.
 
-Variables nuevas: `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION=global`, `VERTEX_MODEL=gemini-3.5-flash-lite`. Se preserva `OPENAI_API_KEY`. En desarrollo local, ADC se puede configurar mediante `gcloud auth application-default login`; la web pública utiliza la identidad de su VM.
+Variables: `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION=global`, `VERTEX_MODEL=gemini-3.8-flash`. Se preserva `OPENAI_API_KEY`. En desarrollo local, ADC se puede configurar mediante `gcloud auth application-default login`; la web pública utiliza la identidad de su VM.
 
-## Verificación
+## Verificación inicial de la integración (Gemini 3.5 Flash-Lite)
 
 188 pruebas aprobadas: las 175 previas y 13 nuevas. Cobertura de transporte real de LangChain interceptado, OAuth de Vertex sin API key, ocho contratos de salida, audio multimodal, permisos/CSRF, activación y reversión, errores de conexión, historial sin secretos, formularios obsoletos, concurrencia y configuración estable durante trabajos.
 
 Publicado y verificado en GCP: 22 archivos comprobados por hash, 15 vistas/permisos por HTTPS, tres activaciones reales Vertex → OpenAI → Vertex con comprobación de texto y audio en cada una. Siete componentes reales adicionales funcionaron: mapeador, generador, calificador, proponedor, importador de malla, resumidor y asistente docente. Las 13 llamadas registradas fueron correctas; Asistente Brilla respondió en 2,41 segundos en esta comprobación puntual. No es una prueba de carga. Huellas de las 27 tablas anteriores idénticas; solo se añadieron revisiones de configuración, uso técnico y sesiones de comprobación que se cerraron.
 
-Proveedor final activo: **Vertex AI · gemini-3.5-flash-lite**, también para transcripción. La VM quedó RUNNING y la aplicación/base saludables. Se mantuvieron IP, URL y credenciales previas de OpenAI. Fue necesario detener/iniciar la VM para asignar la cuenta de servicio; el directorio temporal se limpió durante el arranque y se volvieron a copiar los archivos de despliegue antes de aplicar la versión final. Chrome: escritorio, 390 y 320 px sin desbordamientos, botones de 50 px, activación y notificación flotante con equis. Entorno local de revisión cerrado y viewport restaurado. Evidencias privadas en `.local/deploy-gcp/vertex-verification.json`.
+Proveedor al terminar esa verificación inicial: **Vertex AI · gemini-3.5-flash-lite**, también para transcripción; posteriormente sustituido por Gemini 3.8 Flash. La VM quedó RUNNING y la aplicación/base saludables. Se mantuvieron IP, URL y credenciales previas de OpenAI. Fue necesario detener/iniciar la VM para asignar la cuenta de servicio; el directorio temporal se limpió durante el arranque y se volvieron a copiar los archivos de despliegue antes de aplicar la versión final. Chrome: escritorio, 390 y 320 px sin desbordamientos, botones de 50 px, activación y notificación flotante con equis. Entorno local de revisión cerrado y viewport restaurado. Evidencias privadas en `.local/deploy-gcp/vertex-verification.json`.
 
 Referencias: [Gemini 3.5 Flash-Lite](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/3-5-flash-lite?hl=en), [integración de LangChain](https://docs.langchain.com/oss/python/integrations/chat/google_generative_ai).

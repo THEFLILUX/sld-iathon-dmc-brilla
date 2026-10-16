@@ -53,7 +53,7 @@ LLM_PROVIDER=gemini
 GOOGLE_API_KEY=...
 ```
 
-`LLM_MODEL` elige el modelo (por defecto `gpt-6-luna` u `gemini-3.5-flash`). La transcripción de
+`LLM_MODEL` elige el modelo (por defecto `gpt-6-luna` u `gemini-3.8-flash`). La transcripción de
 videos usa el mismo proveedor salvo que definas `TRANSCRIPTION_PROVIDER`. Reinicia el servidor tras
 cambiar el `.env`.
 
@@ -94,6 +94,6 @@ explica la separación entre la web, los workflows del chatbot y el archivo hist
 
 ## Configuración actual de IA
 
-Administración → **IA y modelos** permite probar y alternar OpenAI y Gemini en Vertex AI mediante LangChain, sin reiniciar. Vertex usa credenciales de Google Cloud (ADC), `GOOGLE_CLOUD_PROJECT` y `GOOGLE_CLOUD_LOCATION`; el modelo inicial es `gemini-3.5-flash-lite`. Esta selección administrativa tiene prioridad sobre el proveedor inicial del `.env`. Ver [configuración de Vertex AI](documentacion/vertex-ai-y-modelos.md).
+Administración → **IA y modelos** permite probar y alternar OpenAI y Gemini en Vertex AI mediante LangChain, sin reiniciar. Vertex usa credenciales de Google Cloud (ADC), `GOOGLE_CLOUD_PROJECT` y `GOOGLE_CLOUD_LOCATION`; el modelo inicial es `gemini-3.8-flash`. Esta selección administrativa tiene prioridad sobre el proveedor inicial del `.env`. Ver [configuración de Vertex AI](documentacion/vertex-ai-y-modelos.md).
 
 Este componente está en `aula-virtual/`; ejecuta los comandos anteriores desde esa carpeta. Las grabaciones, bases de datos y credenciales del despliegue se mantienen fuera de Git.

@@ -107,13 +107,13 @@ class ProveedoresTest(apoyo.Caso):
         self.assertEqual([t.tema_id for t in resultado.temas], [1, 2])
         peticion = capturas[0]
         self.assertEqual(peticion.url.host, "generativelanguage.googleapis.com")
-        self.assertTrue(peticion.url.path.endswith("/models/gemini-3.5-flash:generateContent"))
+        self.assertTrue(peticion.url.path.endswith("/models/gemini-3.8-flash:generateContent"))
         self.assertEqual(peticion.headers["x-goog-api-key"], "clave-google")
         configuracion = json.loads(peticion.content)["generationConfig"]
         self.assertIn("responseJsonSchema", configuracion)
         self.assertIn("low", json.dumps(configuracion["thinkingConfig"]).lower())
         with SessionLocal() as db:
-            self.assertEqual(db.scalar(select(LlamadaIA.modelo)), "gemini:gemini-3.5-flash")
+            self.assertEqual(db.scalar(select(LlamadaIA.modelo)), "gemini:gemini-3.8-flash")
 
     def test_todos_los_esquemas_funcionan_en_ambos_proveedores(self):
         for proveedor in ("openai", "gemini"):

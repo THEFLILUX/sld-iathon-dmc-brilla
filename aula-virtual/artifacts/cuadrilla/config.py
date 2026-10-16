@@ -24,8 +24,8 @@ LIMA = timezone(timedelta(hours=-5), "America/Lima")
 # Language-model providers supported through LangChain (ai/proveedores.py).
 PROVEEDORES_IA = {
     "openai": {"clave": "OPENAI_API_KEY", "modelo": "gpt-6-luna", "transcripcion": "gpt-4o-mini-transcribe"},
-    "gemini": {"clave": "GOOGLE_API_KEY", "modelo": "gemini-3.5-flash", "transcripcion": "gemini-3.5-flash"},
-    "vertex": {"clave": "Credenciales de Google Cloud (ADC)", "modelo": "gemini-3.5-flash-lite", "transcripcion": "gemini-3.5-flash-lite"},
+    "gemini": {"clave": "GOOGLE_API_KEY", "modelo": "gemini-3.8-flash", "transcripcion": "gemini-3.8-flash"},
+    "vertex": {"clave": "Credenciales de Google Cloud (ADC)", "modelo": "gemini-3.8-flash", "transcripcion": "gemini-3.8-flash"},
 }
 
 
@@ -67,7 +67,7 @@ class Settings:
         os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY") or "").strip(), repr=False)
     GOOGLE_CLOUD_PROJECT: str = field(default_factory=lambda: os.getenv("GOOGLE_CLOUD_PROJECT", "").strip())
     GOOGLE_CLOUD_LOCATION: str = field(default_factory=lambda: os.getenv("GOOGLE_CLOUD_LOCATION", "global").strip())
-    VERTEX_MODEL: str = field(default_factory=lambda: os.getenv("VERTEX_MODEL", "gemini-3.5-flash-lite").strip())
+    VERTEX_MODEL: str = field(default_factory=lambda: os.getenv("VERTEX_MODEL", "gemini-3.8-flash").strip())
     DEMO_MODE: bool = field(default_factory=lambda: env_bool("DEMO_MODE", True))
     DEMO_PASSWORD: str = field(default_factory=lambda: os.getenv("DEMO_PASSWORD", "").strip() or "cuadrilla", repr=False)
     ADMIN_DNI: str = field(default_factory=lambda: os.getenv("ADMIN_DNI", "").strip())

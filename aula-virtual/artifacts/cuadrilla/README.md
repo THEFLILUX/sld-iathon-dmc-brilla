@@ -131,7 +131,7 @@ calcula todo lo demás.
 - **Anonimización**: por reglas (correos, teléfonos, DNI, nombres registrados, nombres comunes y nombres
   presentados en el habla). La guardia de privacidad bloquea cualquier llamada que aún contenga datos.
 - **Proveedor y modelo**: `LLM_PROVIDER` (`openai` o `gemini`) y `LLM_MODEL`; por defecto `gpt-6-luna`
-  (el «luna» de la documentación) o `gemini-3.5-flash`. Ver «IA con LangChain» más abajo.
+  (el «luna» de la documentación) o `gemini-3.8-flash`. Ver «IA con LangChain» más abajo.
 
 ### Pendiente (P1 no incluido)
 
